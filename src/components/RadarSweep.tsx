@@ -1,6 +1,6 @@
 export default function RadarSweep({ onClick }: { onClick?: () => void }) {
   return (
-    <div onClick={onClick} className="absolute bottom-16 right-8 z-10 w-24 h-24 rounded-full border-2 border-[#14375b] bg-transparent flex items-center justify-center overflow-hidden pointer-events-auto cursor-pointer hidden md:flex hover:scale-105 transition-transform">
+    <div onClick={onClick} className="absolute bottom-16 right-8 z-10 w-28 h-28 rounded-full border-2 border-[#14375b] bg-transparent flex items-center justify-center overflow-hidden pointer-events-auto cursor-pointer hidden md:flex hover:scale-105 transition-transform">
       
       {/* Radar Grid Lines */}
       <div className="absolute inset-0 rounded-full border border-white/20"></div>
