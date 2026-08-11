@@ -11,7 +11,7 @@ import { Report, ReportType } from "@/lib/types";
 import { MOCK_REPORTS, KERALA_CENTER } from "@/lib/constants";
 
 export default function Home() {
-  const [reports, setReports] = useState<Report[]>(MOCK_REPORTS);
+  const [reports, setReports] = useState<Report[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined);
 

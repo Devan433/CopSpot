@@ -1,6 +1,6 @@
 export default function SideControls() {
   return (
-    <div className="absolute top-4 left-[-20px] z-20 flex flex-col gap-8">
+    <div className="absolute top-4 left-0 z-20 flex flex-col gap-8">
       
       
 
