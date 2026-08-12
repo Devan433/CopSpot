@@ -8,6 +8,7 @@ import RadarSweep from "@/components/RadarSweep";
 import ReportModal from "@/components/ReportModal";
 import InfoModal from "@/components/InfoModal";
 import InstallButton from "@/components/InstallButton";
+import ChatWidget from "@/components/ChatWidget";
 import { Report, ReportType } from "@/lib/types";
 import { KERALA_CENTER } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
@@ -143,6 +144,8 @@ export default function Home() {
         {/* Install Button */}
         <InstallButton />
 
+        {/* Chat Widget */}
+        <ChatWidget />
       </div>
 
       {/* Modals */}
