@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from "react";
 import MapContainer from "@/components/Map/MapContainer";
-import Header from "@/components/Header";
 import ReportButton from "@/components/ReportButton";
 import SideControls from "@/components/SideControls";
 import RadarSweep from "@/components/RadarSweep";
 import ReportModal from "@/components/ReportModal";
 import InfoModal from "@/components/InfoModal";
+import InstallButton from "@/components/InstallButton";
 import { Report, ReportType } from "@/lib/types";
 import { KERALA_CENTER } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
@@ -118,15 +118,11 @@ export default function Home() {
   };
 
   return (
-    <main className="relative w-screen h-screen overflow-hidden flex items-center justify-center p-4 md:p-12">
+    <main className="relative w-screen h-screen overflow-hidden flex items-center justify-center p-0 md:p-8 lg:p-12">
       {/* Device Frame */}
       <div className="device-frame w-full h-full max-w-7xl max-h-[900px] flex flex-col">
-        
-        {/* Header - Overlaps Top Bezel */}
-        <Header />
-
         {/* Map Container - Inside Bezel */}
-        <div className="absolute inset-4 rounded-xl overflow-hidden z-0" style={{ inset: '16px' }}>
+        <div className="absolute inset-0 md:inset-4 rounded-none md:rounded-xl overflow-hidden z-0">
           <MapContainer reports={reports} centerOn={mapCenter} />
         </div>
 
@@ -143,6 +139,9 @@ export default function Home() {
         >
           !
         </button>
+
+        {/* Install Button */}
+        <InstallButton />
 
       </div>
 

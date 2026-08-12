@@ -35,12 +35,17 @@ body {
 /* Device Frame Pixel Border */
 .device-frame {
   background: var(--color-rp-bg);
-  border: 12px solid var(--color-rp-bezel);
-  border-radius: 32px;
-  box-shadow: 
-    inset 0 0 0 6px var(--color-rp-bezel-border),
-    0 0 0 8px #000000;
   position: relative;
+}
+
+@media (min-width: 768px) {
+  .device-frame {
+    border: 12px solid var(--color-rp-bezel);
+    border-radius: 32px;
+    box-shadow: 
+      inset 0 0 0 6px var(--color-rp-bezel-border),
+      0 0 0 8px #000000;
+  }
 }
 
 /* Pixel Border Utility for inner elements */
