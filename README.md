@@ -1,36 +1,99 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# CopSpot 🚨
+
+A community-driven, real-time cop spotter and reporting network for Kerala, India. Built as a Progressive Web App (PWA) for instant mobile access.
+
+## Features
+
+- **📍 Real-time Map** — See live reports on an interactive map powered by Leaflet/OpenStreetMap
+- **👮 Multiple Report Types** — Report police checks, traffic issues, accidents, hazards, and more
+- **✅ Community Verification** — Confirm or deny reports to keep the radar accurate
+- **💬 Live Chat** — Ephemeral, real-time community chat (messages auto-expire after 3 hours)
+- **📱 PWA Install** — Install directly on your phone's home screen, no app store needed
+- **🔒 Profanity Filter** — Client-side content moderation on both reports and chat
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router) |
+| Language | TypeScript |
+| Styling | Tailwind CSS v4 |
+| Maps | Leaflet + react-leaflet |
+| Backend | Supabase (Postgres + Realtime) |
+| PWA | @ducanh2912/next-pwa |
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+- Node.js 18+
+- A Supabase project with `reports` and `messages` tables
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+### Environment Variables
+Create a `.env.local` file in the project root:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Supabase Tables
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+**reports**
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | Primary key, auto-generated |
+| type | text | e.g., 'checking', 'traffic', 'accident', 'hazard', 'other' |
+| latitude | float8 | |
+| longitude | float8 | |
+| description | text | Optional |
+| created_at | timestamptz | Auto-generated |
+| expires_at | timestamptz | Auto-generated (default: 1 hour from creation) |
+| confirmations | int4 | Default: 0 |
+| denials | int4 | Default: 0 |
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+**messages**
+| Column | Type | Notes |
+|---|---|---|
+| id | uuid | Primary key, auto-generated |
+| text | text | |
+| username | text | |
+| created_at | timestamptz | Auto-generated |
 
-## Learn More
+> **Important:** Enable Row Level Security (RLS) on both tables in your Supabase dashboard.
 
-To learn more about Next.js, take a look at the following resources:
+### Run Locally
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+npm install
+npm run dev
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Open [http://localhost:3000](http://localhost:3000) on your browser.
 
-## Deploy on Vercel
+To test on your phone (same Wi-Fi network):
+```bash
+# Find your local IP
+ipconfig  # Windows
+ifconfig  # Mac/Linux
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+# Then visit http://<YOUR_LOCAL_IP>:3000 on your phone
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Build for Production
+
+```bash
+npm run build
+npm run start
+```
+
+## Deployment
+
+Deploy to [Vercel](https://vercel.com) for the easiest setup:
+
+```bash
+npx vercel
+```
+
+## License
+
+MIT

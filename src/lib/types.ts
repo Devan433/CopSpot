@@ -1,4 +1,4 @@
-export type ReportType = 'checking' | 'other';
+export type ReportType = 'checking' | 'traffic' | 'accident' | 'hazard' | 'other';
 
 export interface Report {
   id: string;

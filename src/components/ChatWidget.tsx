@@ -12,7 +12,10 @@ export type ChatMessage = {
   created_at: string;
 };
 
-// Generate a random username for the session
+// Instantiate profanity filter once outside the component
+const profanityFilter = new Filter();
+
+// Generate a random username for the session, persisted to localStorage
 const ADJECTIVES = ["Fast", "Silent", "Neon", "Cyber", "Rogue", "Shadow", "Night", "Drift", "Ghost", "Turbo"];
 const NOUNS = ["Falcon", "Owl", "Fox", "Wolf", "Runner", "Rider", "Pilot", "Hawk", "Viper", "Phantom"];
 const getRandomUsername = () => {
@@ -21,15 +24,23 @@ const getRandomUsername = () => {
   return `${adj} ${noun}`;
 };
 
-export default function ChatWidget() {
+const getOrCreateUsername = (): string => {
+  if (typeof window === "undefined") return getRandomUsername();
+  const stored = localStorage.getItem("copspot_username");
+  if (stored) return stored;
+  const newName = getRandomUsername();
+  localStorage.setItem("copspot_username", newName);
+  return newName;
+};
+
+export default function ChatWidget({ showToast }: { showToast?: (msg: string, type: "success" | "error" | "warning") => void }) {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState("");
-  const [username] = useState(getRandomUsername());
+  const [username] = useState(getOrCreateUsername);
   const [isSending, setIsSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const filter = new Filter();
 
   // Fetch initial messages and set up subscription
   useEffect(() => {
@@ -46,7 +57,7 @@ export default function ChatWidget() {
       if (error) {
         console.error("Error fetching messages:", error);
       } else if (data) {
-        setMessages(data);
+        setMessages(data as ChatMessage[]);
       }
     };
 
@@ -90,8 +101,8 @@ export default function ChatWidget() {
     if (!inputText.trim() || cooldown > 0 || isSending) return;
 
     // Check for bad words
-    if (filter.isProfane(inputText)) {
-      alert("Please keep the chat respectful. Profane language is not allowed.");
+    if (profanityFilter.isProfane(inputText)) {
+      showToast?.("Please keep the chat respectful. Profane language is not allowed.", "warning");
       return;
     }
 
@@ -106,7 +117,7 @@ export default function ChatWidget() {
 
     if (error) {
       console.error("Error sending message:", error);
-      alert("Failed to send message.");
+      showToast?.("Failed to send message.", "error");
     } else {
       setInputText("");
       setCooldown(3); // 3-second cooldown
@@ -118,22 +129,21 @@ export default function ChatWidget() {
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="absolute top-6 left-6 z-20 w-12 h-12 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] flex items-center justify-center hover:bg-[var(--color-rp-border)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
+        className="absolute bottom-6 left-20 z-20 w-11 h-11 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] flex items-center justify-center hover:bg-[var(--color-rp-border)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
-        {/* Unread dot indicator could go here if we tracked last read */}
       </button>
 
-      {/* Chat Drawer */}
+      {/* Chat Drawer - Full width on mobile, fixed width on larger screens */}
       {isOpen && (
-        <div className="absolute top-6 left-6 bottom-6 w-80 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] z-30 flex flex-col shadow-[8px_8px_0_0_#000] overflow-hidden">
+        <div className="absolute inset-4 sm:inset-auto sm:top-6 sm:left-6 sm:bottom-6 sm:w-80 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] z-30 flex flex-col shadow-[8px_8px_0_0_#000] overflow-hidden">
           
           {/* Header */}
           <div className="p-3 border-b-[4px] border-[var(--color-rp-border)] flex justify-between items-center bg-black/20">
             <h2 className="font-bold text-lg" style={{ fontFamily: 'var(--font-pixel)' }}>LIVE CHAT</h2>
-            <button onClick={() => setIsOpen(false)} className="hover:text-red-500 font-bold px-2">
+            <button onClick={() => setIsOpen(false)} className="hover:text-red-500 font-bold w-11 h-11 flex items-center justify-center">
               X
             </button>
           </div>
@@ -174,12 +184,12 @@ export default function ChatWidget() {
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Report activity..."
               maxLength={100}
-              className="flex-1 bg-black/50 border-2 border-[var(--color-rp-border)] px-2 py-1 text-sm focus:outline-none focus:border-white"
+              className="flex-1 bg-black/50 border-2 border-[var(--color-rp-border)] px-2 py-1 text-sm focus:outline-none focus:border-white min-h-[44px]"
             />
             <button
               type="submit"
               disabled={isSending || cooldown > 0 || !inputText.trim()}
-              className="bg-[var(--color-rp-border)] text-black px-3 py-1 font-bold disabled:opacity-50 border-2 border-transparent focus:border-white"
+              className="bg-[var(--color-rp-border)] text-black px-3 py-1 font-bold disabled:opacity-50 border-2 border-transparent focus:border-white min-h-[44px]"
             >
               {cooldown > 0 ? cooldown : 'SEND'}
             </button>

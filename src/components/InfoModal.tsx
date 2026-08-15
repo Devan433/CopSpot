@@ -1,12 +1,12 @@
 export default function InfoModal({ onClose }: { onClose: () => void }) {
   return (
-    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 p-4">
       <div className="bg-[var(--color-rp-bg)] pixel-border p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-lg text-[var(--color-rp-accent)]" style={{ fontFamily: 'var(--font-pixel)' }}>
             COMMUNITY GUIDELINES
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl">X</button>
+          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center">X</button>
         </div>
 
         <div className="space-y-4 text-sm text-gray-300">
@@ -37,7 +37,7 @@ export default function InfoModal({ onClose }: { onClose: () => void }) {
 
         <button
           onClick={onClose}
-          className="w-full py-3 mt-6 pixel-border bg-[var(--color-rp-accent)] text-black font-bold text-lg hover:bg-white transition-colors"
+          className="w-full py-3 mt-6 pixel-border bg-[var(--color-rp-accent)] text-black font-bold text-lg hover:bg-white transition-colors min-h-[44px]"
           style={{ fontFamily: 'var(--font-pixel)' }}
         >
           ACKNOWLEDGE

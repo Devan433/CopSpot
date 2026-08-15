@@ -11,6 +11,6 @@ const MapView = dynamic(() => import("./MapView"), {
   ),
 });
 
-export default function MapContainer(props: { reports: Report[], centerOn?: [number, number] }) {
+export default function MapContainer(props: { reports: Report[], centerOn?: [number, number], onVote?: (reportId: string, voteType: 'confirm' | 'deny') => void }) {
   return <MapView {...props} />;
 }
