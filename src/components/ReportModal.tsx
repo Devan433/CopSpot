@@ -1,21 +1,20 @@
 import { useState } from "react";
-import { ReportType } from "@/lib/types";
-import { REPORT_CONFIG, MAX_DESCRIPTION_LENGTH } from "@/lib/constants";
+import { MAX_DESCRIPTION_LENGTH } from "@/lib/constants";
 import { Filter } from "bad-words";
 
-// Instantiate once outside the component to avoid re-creating on every render
 const profanityFilter = new Filter();
 
 export default function ReportModal({
   onClose,
   onSubmit,
   cooldownRemaining,
+  showToast,
 }: {
   onClose: () => void;
-  onSubmit: (type: ReportType, desc: string, location: { lat: number; lng: number } | null) => void;
+  onSubmit: (desc: string, location: { lat: number; lng: number } | null) => void;
   cooldownRemaining?: number;
+  showToast?: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
-  const [selectedType, setSelectedType] = useState<ReportType | null>(null);
   const [description, setDescription] = useState("");
   const [locationState, setLocationState] = useState<"idle" | "locating" | "done">("idle");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -30,26 +29,27 @@ export default function ReportModal({
           setLocationState("done");
         },
         () => {
+          showToast?.("Could not get location. Check permissions.", "warning");
           setLocationState("idle");
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } else {
+      showToast?.("Geolocation is not supported by this browser.", "error");
       setLocationState("idle");
     }
   };
 
   const handleSubmit = () => {
-    if (!selectedType) return;
     if (isSubmitting) return;
 
-    // Profanity check
     if (description && profanityFilter.isProfane(description)) {
-      return; // The parent should show a toast; we just block submission
+      showToast?.("Please remove profane language from your description.", "warning");
+      return;
     }
 
     setIsSubmitting(true);
-    onSubmit(selectedType, description, coords);
+    onSubmit(description, coords);
   };
 
   const isCoolingDown = (cooldownRemaining ?? 0) > 0;
@@ -61,31 +61,11 @@ export default function ReportModal({
           <h2 className="text-lg text-[var(--color-rp-accent)]" style={{ fontFamily: 'var(--font-pixel)' }}>
             NEW SIGHTING
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center">X</button>
+          <button onClick={onClose} aria-label="Close report modal" className="text-gray-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center">X</button>
         </div>
 
         <div className="mb-4">
-          <label className="block text-[var(--color-rp-border)] text-sm mb-2 uppercase font-bold">1. Select Type</label>
-          <div className="grid grid-cols-2 gap-2">
-            {(Object.keys(REPORT_CONFIG) as ReportType[]).map((type) => (
-              <button
-                key={type}
-                onClick={() => setSelectedType(type)}
-                className={`p-3 pixel-border-sm flex items-center gap-2 text-left transition-colors min-h-[44px] ${
-                  selectedType === type
-                    ? "bg-[var(--color-rp-border)] text-black font-bold"
-                    : "bg-[#0d2137] text-white hover:bg-[#1a2c47]"
-                }`}
-              >
-                <span className="text-xl font-bold">{REPORT_CONFIG[type].icon}</span>
-                <span className="text-xs uppercase">{REPORT_CONFIG[type].label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-[var(--color-rp-border)] text-sm mb-2 uppercase font-bold">2. Location</label>
+          <label className="block text-[var(--color-rp-border)] text-sm mb-2 uppercase font-bold">1. Location</label>
           <button
             onClick={handleUseLocation}
             disabled={locationState === "locating" || locationState === "done"}
@@ -103,7 +83,7 @@ export default function ReportModal({
         </div>
 
         <div className="mb-6">
-          <label className="block text-[var(--color-rp-border)] text-sm mb-2 uppercase font-bold">3. Notes (Optional)</label>
+          <label className="block text-[var(--color-rp-border)] text-sm mb-2 uppercase font-bold">2. Notes (Optional)</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
@@ -118,7 +98,7 @@ export default function ReportModal({
 
         <button
           onClick={handleSubmit}
-          disabled={!selectedType || isSubmitting || isCoolingDown}
+          disabled={isSubmitting || isCoolingDown}
           className="w-full py-4 pixel-border bg-[var(--color-rp-accent)] text-black font-bold text-lg hover:bg-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed min-h-[44px]"
           style={{ fontFamily: 'var(--font-pixel)' }}
         >

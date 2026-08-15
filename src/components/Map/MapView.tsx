@@ -21,8 +21,8 @@ function MapController({ center }: { center?: [number, number] }) {
 // Memoized icon cache to avoid re-creating L.divIcon on every render
 const iconCache = new Map<string, L.DivIcon>();
 
-function getMarkerIcon(type: ReportType, isRecent: boolean): L.DivIcon {
-  const cacheKey = `${type}-${isRecent}`;
+function getMarkerIcon(type: ReportType, isRecent: boolean, opacity: number): L.DivIcon {
+  const cacheKey = `${type}-${isRecent}-${opacity}`;
   const cached = iconCache.get(cacheKey);
   if (cached) return cached;
 
@@ -40,6 +40,8 @@ function getMarkerIcon(type: ReportType, isRecent: boolean): L.DivIcon {
       justify-content: center;
       font-size: 18px;
       box-shadow: 0 4px 0 0 #000;
+      opacity: ${opacity};
+      transition: opacity 0.3s ease;
       ${isRecent ? "animation: pulse-ring 2s infinite;" : ""}
     ">${config.icon}</div>`,
     iconSize: [36, 36],
@@ -55,7 +57,13 @@ export default function MapView({ reports, centerOn, onVote }: { reports: Report
   // Memoize the markers to avoid unnecessary re-renders
   const markers = useMemo(() => reports.map((report) => {
     const isRecent = Date.now() - new Date(report.created_at).getTime() < 10 * 60000;
-    const icon = getMarkerIcon(report.type, isRecent);
+    
+    // Calculate visual decay based on time remaining
+    const timeRemainingMs = new Date(report.expires_at).getTime() - Date.now();
+    // If less than 15 minutes remaining, fade out to 50% opacity
+    const opacity = timeRemainingMs < 15 * 60000 ? 0.5 : 1;
+    
+    const icon = getMarkerIcon(report.type, isRecent, opacity);
     const config = REPORT_CONFIG[report.type];
     const minutesAgo = Math.floor((Date.now() - new Date(report.created_at).getTime()) / 60000);
 

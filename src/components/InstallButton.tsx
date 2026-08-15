@@ -2,8 +2,15 @@
 
 import { useEffect, useState } from "react";
 
+// Custom type for the BeforeInstallPrompt event (not in standard DOM types)
+interface BeforeInstallPromptEvent extends Event {
+  readonly platforms: string[];
+  readonly userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+  prompt(): Promise<void>;
+}
+
 export default function InstallButton() {
-  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
@@ -11,7 +18,7 @@ export default function InstallButton() {
       // Prevent the mini-infobar from appearing on mobile
       e.preventDefault();
       // Stash the event so it can be triggered later.
-      setDeferredPrompt(e);
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
       // Update UI notify the user they can install the PWA
       setIsVisible(true);
     };
@@ -32,7 +39,6 @@ export default function InstallButton() {
     // Wait for the user to respond to the prompt
     const { outcome } = await deferredPrompt.userChoice;
     
-    // Optionally, send analytics event with outcome of user choice
     console.log(`User response to the install prompt: ${outcome}`);
     
     // We've used the prompt, and can't use it again, throw it away
@@ -41,13 +47,14 @@ export default function InstallButton() {
   };
 
   if (!isVisible) {
-    return null; // Don't show the button if app is already installed or not supported
+    return null;
   }
 
   return (
     <button
       onClick={handleInstallClick}
-      className="absolute bottom-20 left-6 z-20 px-3 h-10 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-accent)] text-[var(--color-rp-accent)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-rp-accent)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
+      aria-label="Install CopSpot app"
+      className="absolute bottom-20 left-6 z-20 px-3 min-h-[44px] bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-accent)] text-[var(--color-rp-accent)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-rp-accent)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
       style={{ fontFamily: 'var(--font-pixel)' }}
     >
       INSTALL APP

@@ -129,6 +129,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
       {/* Toggle Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
+        aria-label={isOpen ? "Close chat" : "Open chat"}
         className="absolute bottom-6 left-20 z-20 w-11 h-11 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] flex items-center justify-center hover:bg-[var(--color-rp-border)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
       >
         <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
@@ -143,7 +144,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
           {/* Header */}
           <div className="p-3 border-b-[4px] border-[var(--color-rp-border)] flex justify-between items-center bg-black/20">
             <h2 className="font-bold text-lg" style={{ fontFamily: 'var(--font-pixel)' }}>LIVE CHAT</h2>
-            <button onClick={() => setIsOpen(false)} className="hover:text-red-500 font-bold w-11 h-11 flex items-center justify-center">
+            <button onClick={() => setIsOpen(false)} aria-label="Close chat" className="hover:text-red-500 font-bold w-11 h-11 flex items-center justify-center">
               X
             </button>
           </div>

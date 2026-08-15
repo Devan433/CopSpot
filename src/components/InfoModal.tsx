@@ -6,7 +6,7 @@ export default function InfoModal({ onClose }: { onClose: () => void }) {
           <h2 className="text-lg text-[var(--color-rp-accent)]" style={{ fontFamily: 'var(--font-pixel)' }}>
             COMMUNITY GUIDELINES
           </h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center">X</button>
+          <button onClick={onClose} aria-label="Close guidelines" className="text-gray-400 hover:text-white text-xl w-11 h-11 flex items-center justify-center">X</button>
         </div>
 
         <div className="space-y-4 text-sm text-gray-300">
