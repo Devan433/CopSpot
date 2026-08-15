@@ -158,16 +158,35 @@ export default function Home() {
     setLastReportTime(now);
     setCooldownRemaining(REPORT_COOLDOWN_MS);
 
-    const { error } = await supabase.from('reports').insert({
-      type: 'checking',
+    const insertPayload = {
+      type: 'checking' as const,
       description: desc,
       latitude,
-      longitude
-    });
+      longitude,
+      expires_at: new Date(Date.now() + 60 * 60000).toISOString()
+    };
+
+    let { error } = await supabase.from('reports').insert(insertPayload);
+
+    // If it failed, retry without expires_at in case that column doesn't exist yet
+    if (error) {
+      const { expires_at, ...fallbackPayload } = insertPayload;
+      const fallbackResult = await supabase.from('reports').insert(fallbackPayload);
+      if (!fallbackResult.error) {
+        error = null; // Fallback succeeded
+      } else {
+        error = fallbackResult.error; // Use the fallback error for logging
+      }
+    }
 
     if (error) {
-      console.error("Error inserting report:", error);
-      showToast("Failed to submit report. Please try again.", "error");
+      console.error("Error inserting report:", {
+        message: error.message,
+        code: error.code,
+        details: error.details,
+        hint: error.hint,
+      });
+      showToast(`Failed to submit report: ${error.message || 'Check Supabase RLS policies'}`, "error");
     } else {
       showToast("Report transmitted successfully!", "success");
     }

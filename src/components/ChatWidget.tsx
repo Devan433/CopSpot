@@ -150,15 +150,16 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
           </div>
 
           {/* Sticky Notice */}
-          <div className="bg-yellow-500/20 border-b-2 border-yellow-500/50 p-2 text-xs text-yellow-100 text-center">
-            🕒 Messages automatically disappear after 3 hours to keep reports real-time.
+          <div className="text-center p-2 text-xs text-slate-500 border-b border-slate-700/50 bg-black/20 flex items-center justify-center gap-1">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            Messages automatically disappear after 3 hours to keep reports real-time.
           </div>
 
           {/* Message List */}
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-3">
             {messages.length === 0 ? (
               <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 space-y-2">
-                <span className="text-2xl">🚦</span>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
                 <p className="text-sm">No reports in the last 3 hours. The streets are clear!</p>
               </div>
             ) : (

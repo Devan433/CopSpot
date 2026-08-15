@@ -75,8 +75,8 @@ export default function MapView({ reports, centerOn, onVote }: { reports: Report
       >
         <Popup>
           <div className="flex flex-col gap-2">
-            <div className="font-bold text-[var(--color-rp-border)] text-sm mb-1 uppercase" style={{ fontFamily: 'var(--font-pixel)' }}>
-              {config.icon} {config.label}
+            <div className="font-bold text-[var(--color-rp-border)] text-sm mb-1 uppercase flex items-center gap-1" style={{ fontFamily: 'var(--font-pixel)' }}>
+              <span dangerouslySetInnerHTML={{ __html: config.icon }} /> {config.label}
             </div>
             <div className="text-xs text-gray-400">
               Reported {minutesAgo < 1 ? "just now" : `${minutesAgo} min ago`}

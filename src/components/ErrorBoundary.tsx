@@ -28,7 +28,9 @@ export default class ErrorBoundary extends React.Component<
     if (this.state.hasError) {
       return (
         <div className="fixed inset-0 bg-[#0a1628] flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-6xl mb-6">💥</div>
+          <div className="text-6xl mb-6 text-red-500">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          </div>
           <h1
             className="text-xl text-[#ff1744] mb-4"
             style={{ fontFamily: "var(--font-pixel)" }}
