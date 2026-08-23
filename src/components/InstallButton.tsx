@@ -54,10 +54,10 @@ export default function InstallButton() {
     <button
       onClick={handleInstallClick}
       aria-label="Install CopSpot app"
-      className="absolute bottom-20 left-6 z-20 px-3 min-h-[44px] bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-accent)] text-[var(--color-rp-accent)] font-bold text-sm flex items-center justify-center hover:bg-[var(--color-rp-accent)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
-      style={{ fontFamily: 'var(--font-pixel)' }}
+      className="btn-secondary px-3 py-2 rounded-sm shadow-xl flex items-center justify-center gap-2 text-xs font-bold tracking-wider uppercase min-h-[44px]"
     >
-      INSTALL APP
+      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Install
     </button>
   );
 }

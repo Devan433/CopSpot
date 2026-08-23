@@ -11,3 +11,11 @@ export interface Report {
   confirmations: number;
   denials: number;
 }
+
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+

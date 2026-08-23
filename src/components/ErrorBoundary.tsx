@@ -27,28 +27,24 @@ export default class ErrorBoundary extends React.Component<
   render() {
     if (this.state.hasError) {
       return (
-        <div className="fixed inset-0 bg-[#0a1628] flex flex-col items-center justify-center p-8 text-center">
-          <div className="text-6xl mb-6 text-red-500">
+        <div className="fixed inset-0 bg-[var(--color-cs-base)] flex flex-col items-center justify-center p-8 text-center">
+          <div className="text-[var(--color-cs-red)] mb-6">
             <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
           </div>
-          <h1
-            className="text-xl text-[#ff1744] mb-4"
-            style={{ fontFamily: "var(--font-pixel)" }}
-          >
+          <h1 className="text-xl text-[var(--color-cs-red)] mb-4 font-mono font-bold tracking-widest uppercase">
             SYSTEM ERROR
           </h1>
-          <p className="text-gray-400 mb-6 max-w-md">
+          <p className="text-[var(--color-cs-text-muted)] mb-6 max-w-md">
             Something went wrong. The radar has encountered an unexpected error.
           </p>
           <button
             onClick={() => window.location.reload()}
-            className="px-6 py-3 bg-[#00bcd4] text-black font-bold border-4 border-black shadow-[0_4px_0_0_#000] hover:bg-white transition-colors active:translate-y-1"
-            style={{ fontFamily: "var(--font-pixel)" }}
+            className="btn-primary px-8 py-4 font-bold tracking-widest uppercase"
           >
             REBOOT
           </button>
           {this.state.error && (
-            <pre className="mt-6 text-xs text-gray-600 max-w-md overflow-auto">
+            <pre className="mt-6 text-xs text-[var(--color-cs-text-muted)] max-w-md overflow-auto font-mono">
               {this.state.error.message}
             </pre>
           )}

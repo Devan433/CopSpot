@@ -24,11 +24,11 @@ export default function ToastContainer({
         return (
           <div
             key={toast.id}
-            className={`${style.bg} ${style.border} border-2 px-4 py-3 flex items-center gap-3 shadow-[4px_4px_0_0_#000] pointer-events-auto animate-[slideDown_0.3s_ease-out]`}
+            className={`${style.bg} ${style.border} border px-4 py-3 flex items-center gap-3 shadow-lg pointer-events-auto animate-[slideDown_0.3s_ease-out] backdrop-blur-sm`}
             onClick={() => onDismiss(toast.id)}
             role="alert"
           >
-            <span className="text-lg font-bold" style={{ fontFamily: 'var(--font-pixel)' }}>
+            <span className="text-lg font-bold font-mono">
               {style.icon}
             </span>
             <span className="text-sm text-white flex-1">{toast.message}</span>

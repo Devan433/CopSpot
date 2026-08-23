@@ -4,7 +4,7 @@ import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
 import { KERALA_CENTER, DEFAULT_ZOOM, REPORT_CONFIG } from "@/lib/constants";
-import { Report, ReportType } from "@/lib/types";
+import { Report, ReportType, MapBounds } from "@/lib/types";
 import "leaflet/dist/leaflet.css";
 
 // Helper to center map
@@ -15,6 +15,29 @@ function MapController({ center }: { center?: [number, number] }) {
       map.flyTo(center, 14, { duration: 1.5 });
     }
   }, [center, map]);
+  return null;
+}
+
+// Track map viewport bounds changes
+function BoundsTracker({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
+  const map = useMap();
+
+  useEffect(() => {
+    const handleMoveEnd = () => {
+      const b = map.getBounds();
+      onBoundsChange({
+        north: b.getNorth(),
+        south: b.getSouth(),
+        east: b.getEast(),
+        west: b.getWest(),
+      });
+    };
+
+    handleMoveEnd(); // Fire on mount to get initial bounds
+    map.on('moveend', handleMoveEnd);
+    return () => { map.off('moveend', handleMoveEnd); };
+  }, [map, onBoundsChange]);
+
   return null;
 }
 
@@ -53,7 +76,7 @@ function getMarkerIcon(type: ReportType, isRecent: boolean, opacity: number): L.
   return icon;
 }
 
-export default function MapView({ reports, centerOn, onVote }: { reports: Report[], centerOn?: [number, number], onVote?: (reportId: string, voteType: 'confirm' | 'deny') => void }) {
+export default function MapView({ reports, centerOn, onVote, onBoundsChange }: { reports: Report[], centerOn?: [number, number], onVote?: (reportId: string, voteType: 'confirm' | 'deny') => void, onBoundsChange?: (bounds: MapBounds) => void }) {
   // Memoize the markers to avoid unnecessary re-renders
   const markers = useMemo(() => reports.map((report) => {
     const isRecent = Date.now() - new Date(report.created_at).getTime() < 10 * 60000;
@@ -75,7 +98,7 @@ export default function MapView({ reports, centerOn, onVote }: { reports: Report
       >
         <Popup>
           <div className="flex flex-col gap-2">
-            <div className="font-bold text-[var(--color-rp-border)] text-sm mb-1 uppercase flex items-center gap-1" style={{ fontFamily: 'var(--font-pixel)' }}>
+            <div className="font-bold text-[var(--color-cs-cyan)] text-sm mb-1 uppercase flex items-center gap-1 font-mono tracking-wider">
               <span dangerouslySetInnerHTML={{ __html: config.icon }} /> {config.label}
             </div>
             <div className="text-xs text-gray-400">
@@ -87,13 +110,13 @@ export default function MapView({ reports, centerOn, onVote }: { reports: Report
             <div className="flex gap-2 mt-2 font-bold">
               <button 
                 onClick={() => onVote?.(report.id, 'confirm')}
-                className="flex-1 bg-[var(--color-rp-bg)] pixel-border-sm py-1 hover:bg-[#1a2c47] transition-colors text-xs text-green-400 min-h-[44px]"
+                className="flex-1 bg-[var(--color-cs-frame)] border border-[var(--color-cs-border)] py-1 hover:bg-[#1a2c47] hover:border-[var(--color-cs-border-light)] transition-colors text-xs text-green-400 min-h-[44px]"
               >
                 ✓ {report.confirmations}
               </button>
               <button 
                 onClick={() => onVote?.(report.id, 'deny')}
-                className="flex-1 bg-[var(--color-rp-bg)] pixel-border-sm py-1 hover:bg-[#1a2c47] transition-colors text-xs text-red-400 min-h-[44px]"
+                className="flex-1 bg-[var(--color-cs-frame)] border border-[var(--color-cs-border)] py-1 hover:bg-[#1a2c47] hover:border-[var(--color-cs-border-light)] transition-colors text-xs text-red-400 min-h-[44px]"
               >
                 ✕ {report.denials}
               </button>
@@ -112,6 +135,7 @@ export default function MapView({ reports, centerOn, onVote }: { reports: Report
       zoomControl={false}
     >
       <MapController center={centerOn} />
+      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
       
       {/* Standard OSM Map */}
       <TileLayer

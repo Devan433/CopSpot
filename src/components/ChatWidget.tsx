@@ -130,29 +130,36 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
       <button
         onClick={() => setIsOpen(!isOpen)}
         aria-label={isOpen ? "Close chat" : "Open chat"}
-        className="absolute bottom-6 left-20 z-20 w-11 h-11 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] flex items-center justify-center hover:bg-[var(--color-rp-border)] hover:text-black transition-colors shadow-[0_4px_0_0_#000]"
+        className="btn-icon w-12 h-12 md:w-14 md:h-14 rounded-sm shadow-xl flex items-center justify-center"
       >
-        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="square" strokeLinejoin="miter">
+        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
           <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
         </svg>
       </button>
 
-      {/* Chat Drawer - Full width on mobile, fixed width on larger screens */}
+      {/* Chat Drawer */}
       {isOpen && (
-        <div className="absolute inset-4 sm:inset-auto sm:top-6 sm:left-6 sm:bottom-6 sm:w-80 bg-[var(--color-rp-bg)] border-[4px] border-[var(--color-rp-border)] z-30 flex flex-col shadow-[8px_8px_0_0_#000] overflow-hidden">
+        <div className="fixed inset-4 sm:absolute sm:inset-auto sm:top-0 sm:left-0 sm:bottom-0 sm:w-80 bg-[var(--color-cs-panel)] border border-[var(--color-cs-border-light)] z-30 flex flex-col shadow-xl overflow-hidden backdrop-blur-sm">
           
           {/* Header */}
-          <div className="p-3 border-b-[4px] border-[var(--color-rp-border)] flex justify-between items-center bg-black/20">
-            <h2 className="font-bold text-lg" style={{ fontFamily: 'var(--font-pixel)' }}>LIVE CHAT</h2>
-            <button onClick={() => setIsOpen(false)} aria-label="Close chat" className="hover:text-red-500 font-bold w-11 h-11 flex items-center justify-center">
-              X
+          <div className="p-3 border-b border-[var(--color-cs-border)] flex justify-between items-center bg-[var(--color-cs-frame)]">
+            <h2 className="font-bold text-sm tracking-widest uppercase flex items-center gap-2 text-[var(--color-cs-text)]">
+              <span className="text-[var(--color-cs-text-muted)] font-mono font-normal">CS//</span>
+              Live Chat
+            </h2>
+            <button
+              onClick={() => setIsOpen(false)}
+              aria-label="Close chat"
+              className="text-[var(--color-cs-text-muted)] hover:text-white bg-[var(--color-cs-base)] hover:bg-[var(--color-cs-border)] border border-[var(--color-cs-border)] w-6 h-6 flex items-center justify-center transition-colors text-xs font-mono"
+            >
+              ✕
             </button>
           </div>
 
           {/* Sticky Notice */}
-          <div className="text-center p-2 text-xs text-slate-500 border-b border-slate-700/50 bg-black/20 flex items-center justify-center gap-1">
+          <div className="text-center p-2 text-[10px] text-[var(--color-cs-text-muted)] border-b border-[var(--color-cs-border)] bg-[var(--color-cs-frame)] flex items-center justify-center gap-1 font-mono tracking-wider">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-            Messages automatically disappear after 3 hours to keep reports real-time.
+            AUTO-EXPIRE: 3H
           </div>
 
           {/* Message List */}
@@ -165,11 +172,11 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
             ) : (
               messages.map((msg) => (
                 <div key={msg.id} className={`flex flex-col ${msg.username === username ? 'items-end' : 'items-start'}`}>
-                  <span className="text-[10px] opacity-70 mb-1">{msg.username}</span>
-                  <div className={`px-3 py-2 text-sm border-2 ${msg.username === username ? 'bg-[var(--color-rp-border)] text-black border-black' : 'bg-black/40 border-[var(--color-rp-border)]'}`}>
+                  <span className="text-[10px] text-[var(--color-cs-text-muted)] mb-1 font-mono">{msg.username}</span>
+                  <div className={`px-3 py-2 text-sm border ${msg.username === username ? 'bg-[var(--color-cs-cyan)] text-[var(--color-cs-base)] border-[var(--color-cs-cyan)] font-medium' : 'bg-[var(--color-cs-frame)] border-[var(--color-cs-border)]'}`}>
                     {msg.text}
                   </div>
-                  <span className="text-[9px] opacity-50 mt-1">
+                  <span className="text-[9px] text-[var(--color-cs-text-muted)] mt-1 font-mono">
                     {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
                 </div>
@@ -179,21 +186,21 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
           </div>
 
           {/* Input Area */}
-          <form onSubmit={handleSendMessage} className="p-3 border-t-[4px] border-[var(--color-rp-border)] flex gap-2 bg-black/20">
+          <form onSubmit={handleSendMessage} className="p-3 border-t border-[var(--color-cs-border)] flex gap-2 bg-[var(--color-cs-frame)]">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               placeholder="Report activity..."
               maxLength={100}
-              className="flex-1 bg-black/50 border-2 border-[var(--color-rp-border)] px-2 py-1 text-sm focus:outline-none focus:border-white min-h-[44px]"
+              className="flex-1 bg-[var(--color-cs-base)] border border-[var(--color-cs-border-light)] px-3 py-2 text-sm focus:outline-none focus:border-[var(--color-cs-cyan)] transition-colors min-h-[44px] text-[var(--color-cs-text)] placeholder-[var(--color-cs-text-muted)]"
             />
             <button
               type="submit"
               disabled={isSending || cooldown > 0 || !inputText.trim()}
-              className="bg-[var(--color-rp-border)] text-black px-3 py-1 font-bold disabled:opacity-50 border-2 border-transparent focus:border-white min-h-[44px]"
+              className="bg-[var(--color-cs-cyan)] text-[var(--color-cs-base)] px-4 py-2 font-bold text-sm tracking-wider disabled:opacity-40 disabled:cursor-not-allowed border border-transparent focus:border-white min-h-[44px] transition-opacity uppercase"
             >
-              {cooldown > 0 ? cooldown : 'SEND'}
+              {cooldown > 0 ? cooldown : 'Send'}
             </button>
           </form>
         </div>

@@ -1,8 +1,11 @@
 import { useState } from "react";
-import { MAX_DESCRIPTION_LENGTH } from "@/lib/constants";
+import { MAX_DESCRIPTION_LENGTH, REPORT_CONFIG } from "@/lib/constants";
+import { ReportType } from "@/lib/types";
 import { Filter } from "bad-words";
 
 const profanityFilter = new Filter();
+
+const REPORT_TYPES: ReportType[] = ["checking", "traffic", "accident", "hazard", "other"];
 
 export default function ReportModal({
   onClose,
@@ -11,10 +14,11 @@ export default function ReportModal({
   showToast,
 }: {
   onClose: () => void;
-  onSubmit: (desc: string, location: { lat: number; lng: number } | null) => void;
+  onSubmit: (type: ReportType, desc: string, location: { lat: number; lng: number } | null) => void;
   cooldownRemaining?: number;
   showToast?: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
+  const [selectedType, setSelectedType] = useState<ReportType>("checking");
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "locating" | "transmitting">("idle");
@@ -34,85 +38,144 @@ export default function ReportModal({
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setSubmitStatus("transmitting");
-          onSubmit(description, { lat: pos.coords.latitude, lng: pos.coords.longitude });
+          onSubmit(selectedType, description, { lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
         () => {
           showToast?.("Could not get exact GPS, using map center instead.", "warning");
           setSubmitStatus("transmitting");
-          onSubmit(description, null); // Falls back to map center in page.tsx
+          onSubmit(selectedType, description, null);
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } else {
       setSubmitStatus("transmitting");
-      onSubmit(description, null);
+      onSubmit(selectedType, description, null);
     }
   };
 
   const isCoolingDown = (cooldownRemaining ?? 0) > 0;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in duration-200">
-      <div className="bg-[#0f172a] border-2 border-slate-700/50 rounded-2xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/50">
+    <div className="fixed inset-0 z-[1000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-in fade-in duration-200">
+      
+      {/* Structural Modal Frame */}
+      <div className="bg-[var(--color-cs-base)] border border-[var(--color-cs-border-light)] shadow-[inset_0_0_0_4px_var(--color-cs-frame)] p-1 w-full max-w-md max-h-[90vh] flex flex-col relative">
         
-        {/* Header */}
-        <div className="flex justify-between items-center mb-6 border-b border-slate-700/50 pb-4">
-          <h2 className="text-xl font-bold text-white flex items-center gap-3">
-            <span className="bg-red-500/20 text-red-500 p-2 rounded-lg">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            </span>
-            Report Sighting
-          </h2>
-          <button 
-            onClick={onClose} 
-            aria-label="Close report modal" 
-            className="text-slate-400 hover:text-white bg-slate-800 hover:bg-slate-700 rounded-full w-8 h-8 flex items-center justify-center transition-colors"
-          >
-            ✕
-          </button>
-        </div>
+        {/* Corner Accents */}
+        <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[var(--color-cs-cyan)] z-10" />
+        <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[var(--color-cs-cyan)] z-10" />
+        <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[var(--color-cs-cyan)] z-10" />
+        <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[var(--color-cs-cyan)] z-10" />
 
-        {/* Notes Section */}
-        <div className="mb-6">
-          <label className="block text-slate-300 text-sm font-bold mb-3">
-            Additional Details <span className="text-slate-500 font-normal">(Optional)</span>
-          </label>
-          <div className="relative">
-            <textarea
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              className="w-full bg-slate-900/50 border-2 border-slate-700 rounded-xl p-4 text-white placeholder-slate-500 outline-none focus:border-blue-500 transition-colors resize-none h-32 font-sans shadow-inner"
-              placeholder="e.g. Traffic is piling up, checking documents..."
-              maxLength={MAX_DESCRIPTION_LENGTH}
-              autoFocus
-            />
-            <div className={`absolute bottom-3 right-3 text-xs font-mono ${description.length >= MAX_DESCRIPTION_LENGTH ? 'text-red-400' : 'text-slate-500'}`}>
-              {description.length}/{MAX_DESCRIPTION_LENGTH}
+        <div className="bg-[var(--color-cs-panel)] border border-[var(--color-cs-border)] flex-1 overflow-y-auto">
+          
+          {/* Header */}
+          <div className="flex justify-between items-center bg-[var(--color-cs-frame)] border-b border-[var(--color-cs-border)] p-4">
+            <h2 className="text-[var(--color-cs-text)] font-bold text-sm tracking-widest flex items-center gap-2 m-0 uppercase">
+              <span className="text-[var(--color-cs-red)] flex items-center justify-center border border-[var(--color-cs-red)] w-6 h-6 bg-[rgba(239,68,68,0.1)]">
+                !
+              </span>
+              Report Sighting
+            </h2>
+            <button
+              onClick={onClose}
+              aria-label="Close report modal"
+              className="text-[var(--color-cs-text-muted)] hover:text-white bg-[var(--color-cs-base)] hover:bg-[var(--color-cs-border)] border border-[var(--color-cs-border)] w-6 h-6 flex items-center justify-center transition-colors text-xs font-mono"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div className="p-6">
+            {/* Report Type Selector */}
+            <div className="mb-6">
+              <label className="flex justify-between items-end mb-2">
+                <span className="text-[var(--color-cs-text)] text-xs font-bold uppercase tracking-wider">
+                  Sighting Type
+                </span>
+                <span className="text-[var(--color-cs-text-muted)] text-[10px] font-mono tracking-widest">
+                  [REQUIRED]
+                </span>
+              </label>
+              <div className="grid grid-cols-5 gap-1.5">
+                {REPORT_TYPES.map((type) => {
+                  const config = REPORT_CONFIG[type];
+                  const isSelected = selectedType === type;
+                  return (
+                    <button
+                      key={type}
+                      type="button"
+                      onClick={() => setSelectedType(type)}
+                      className={`flex flex-col items-center gap-1.5 py-3 px-1 border transition-all text-center ${
+                        isSelected
+                          ? "border-[var(--color-cs-cyan)] bg-[var(--color-cs-frame)] shadow-[inset_0_0_12px_rgba(6,182,212,0.15)]"
+                          : "border-[var(--color-cs-border)] bg-[var(--color-cs-base)] hover:border-[var(--color-cs-border-light)] hover:bg-[var(--color-cs-frame)]"
+                      }`}
+                    >
+                      <span
+                        className="flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors"
+                        style={{ borderColor: isSelected ? config.color : 'var(--color-cs-border)' }}
+                        dangerouslySetInnerHTML={{ __html: config.icon }}
+                      />
+                      <span className={`text-[9px] font-mono uppercase tracking-wider leading-tight ${
+                        isSelected ? 'text-[var(--color-cs-text)]' : 'text-[var(--color-cs-text-muted)]'
+                      }`}>
+                        {config.label}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
+
+            {/* Notes Section */}
+            <div className="mb-6">
+              <label className="flex justify-between items-end mb-2">
+                <span className="text-[var(--color-cs-text)] text-xs font-bold uppercase tracking-wider">
+                  Additional Details
+                </span>
+                <span className="text-[var(--color-cs-text-muted)] text-[10px] font-mono tracking-widest">
+                  [OPTIONAL]
+                </span>
+              </label>
+              
+              <div className="relative">
+                <textarea
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="w-full bg-[var(--color-cs-base)] border border-[var(--color-cs-border-light)] p-3 text-[var(--color-cs-text)] placeholder-[var(--color-cs-text-muted)] outline-none focus:border-[var(--color-cs-cyan)] transition-colors resize-none h-32 font-sans text-sm rounded-none"
+                  placeholder="e.g. Traffic is piling up, checking documents..."
+                  maxLength={MAX_DESCRIPTION_LENGTH}
+                />
+                <div className={`absolute bottom-3 right-3 text-[10px] font-mono tracking-widest ${description.length >= MAX_DESCRIPTION_LENGTH ? 'text-[var(--color-cs-red)]' : 'text-[var(--color-cs-text-muted)]'}`}>
+                  {description.length}/{MAX_DESCRIPTION_LENGTH}
+                </div>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              onClick={handleSubmit}
+              disabled={isSubmitting || isCoolingDown}
+              className={`w-full py-4 font-bold text-sm tracking-widest transition-all uppercase flex items-center justify-center gap-2 border ${
+                isCoolingDown || isSubmitting
+                  ? "bg-[var(--color-cs-frame)] text-[var(--color-cs-text-muted)] border-[var(--color-cs-border)] cursor-not-allowed"
+                  : "bg-[#7F1D1D] hover:bg-[#991B1B] text-white border-[#EF4444] shadow-[inset_0_0_20px_rgba(239,68,68,0.3)] active:bg-[#450A0A]"
+              }`}
+            >
+              {submitStatus === "locating" && (
+                <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              )}
+              {isCoolingDown
+                ? `COOLDOWN [ ${Math.ceil((cooldownRemaining ?? 0) / 1000)}s ]`
+                : submitStatus === "locating"
+                  ? "ACQUIRING GPS..."
+                  : submitStatus === "transmitting"
+                    ? "TRANSMITTING..."
+                    : "TRANSMIT REPORT"}
+            </button>
           </div>
         </div>
-
-        {/* Submit Button */}
-        <button
-          onClick={handleSubmit}
-          disabled={isSubmitting || isCoolingDown}
-          className={`w-full py-4 rounded-xl font-bold text-lg tracking-wide transition-all shadow-lg flex items-center justify-center gap-2 ${
-            isCoolingDown || isSubmitting
-              ? "bg-slate-700 text-slate-400 cursor-not-allowed border-b-4 border-slate-800"
-              : "bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-400 hover:to-red-400 text-white border-b-4 border-red-700 active:border-b-0 active:translate-y-1"
-          }`}
-        >
-          {submitStatus === "locating" && (
-            <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-          )}
-          {isCoolingDown
-            ? `Cooldown (${Math.ceil((cooldownRemaining ?? 0) / 1000)}s)`
-            : submitStatus === "locating"
-            ? "Acquiring GPS..."
-            : submitStatus === "transmitting"
-            ? "Transmitting..."
-            : "TRANSMIT REPORT"}
-        </button>
       </div>
     </div>
   );
