@@ -70,6 +70,7 @@ export default function Home() {
   const { toasts, showToast, dismissToast } = useToast();
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const boundsTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const userLocationRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {
     if (cooldownRemaining <= 0) return;
@@ -79,6 +80,23 @@ export default function Home() {
     }, 1000);
     return () => clearInterval(timer);
   }, [cooldownRemaining, lastReportTime]);
+
+  // Auto-locate user on app load
+  useEffect(() => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const userPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+          userLocationRef.current = userPos;
+          setMapCenter(userPos);
+        },
+        () => {
+          // Silent fallback — map stays at default Kerala center
+        },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+  }, []);
 
   useEffect(() => {
     const fetchReports = async () => {
@@ -155,8 +173,21 @@ export default function Home() {
       return;
     }
 
-    const latitude = location ? location.lat : (mapCenter ? mapCenter[0] : KERALA_CENTER[0]);
-    const longitude = location ? location.lng : (mapCenter ? mapCenter[1] : KERALA_CENTER[1]);
+    // Fallback chain: fresh GPS → actual map viewport center → last known GPS → KERALA_CENTER
+    let latitude: number;
+    let longitude: number;
+
+    if (location) {
+      latitude = location.lat;
+      longitude = location.lng;
+    } else {
+      const viewportCenter: [number, number] | null = mapBounds
+        ? [(mapBounds.north + mapBounds.south) / 2, (mapBounds.east + mapBounds.west) / 2]
+        : null;
+      const fallback = viewportCenter ?? userLocationRef.current ?? KERALA_CENTER;
+      latitude = fallback[0];
+      longitude = fallback[1];
+    }
 
     setIsModalOpen(false);
     setMapCenter([latitude, longitude]);
@@ -267,7 +298,9 @@ export default function Home() {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (pos) => {
-          setMapCenter([pos.coords.latitude, pos.coords.longitude]);
+          const userPos: [number, number] = [pos.coords.latitude, pos.coords.longitude];
+          userLocationRef.current = userPos;
+          setMapCenter(userPos);
         },
         () => {
           showToast("Could not get location. Make sure permissions are granted.", "warning");
