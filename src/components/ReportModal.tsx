@@ -55,7 +55,7 @@ export default function ReportModal({
   return (
     <div className="fixed inset-0 z-[1000] flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-4">
       
-      <div className="modal-frame w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl">
+      <div className="bg-black border border-white/20 w-full sm:max-w-md max-h-[90vh] flex flex-col rounded-t-2xl sm:rounded-2xl">
         
         <div className="flex-1 overflow-y-auto">
           
@@ -67,7 +67,7 @@ export default function ReportModal({
             <button
               onClick={onClose}
               aria-label="Close report modal"
-              className="text-[var(--color-cs-text-muted)] hover:text-white w-8 h-8 flex items-center justify-center transition-colors text-lg rounded-full hover:bg-white/10"
+              className="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center transition-colors text-lg rounded-full hover:bg-white/10"
             >
               ✕
             </button>
@@ -78,19 +78,19 @@ export default function ReportModal({
 
             {/* Notes Section */}
             <div className="mb-5">
-              <label className="text-[var(--color-cs-text-muted)] text-xs font-medium uppercase tracking-wider mb-2 block">
-                Details <span className="text-[var(--color-cs-text-muted)] opacity-60">(optional)</span>
+              <label className="text-gray-400 text-xs font-medium uppercase tracking-wider mb-2 block">
+                Details <span className="text-gray-400 opacity-60">(optional)</span>
               </label>
               
               <div className="relative">
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="w-full bg-white/5 border border-white/10 p-3 text-white placeholder-[var(--color-cs-text-muted)] outline-none focus:border-white/30 transition-colors resize-none h-28 text-sm rounded-xl"
+                  className="w-full bg-white/5 border border-white/10 p-3 text-white placeholder-gray-400 outline-none focus:border-white/30 transition-colors resize-none h-28 text-sm rounded-xl"
                   placeholder="e.g. Traffic is piling up, checking documents..."
                   maxLength={MAX_DESCRIPTION_LENGTH}
                 />
-                <div className={`absolute bottom-3 right-3 text-[10px] font-mono ${description.length >= MAX_DESCRIPTION_LENGTH ? 'text-[var(--color-cs-red)]' : 'text-[var(--color-cs-text-muted)] opacity-50'}`}>
+                <div className={`absolute bottom-3 right-3 text-[10px] font-mono ${description.length >= MAX_DESCRIPTION_LENGTH ? 'text-red-500' : 'text-gray-400 opacity-50'}`}>
                   {description.length}/{MAX_DESCRIPTION_LENGTH}
                 </div>
               </div>
@@ -102,8 +102,8 @@ export default function ReportModal({
               disabled={isSubmitting || isCoolingDown}
               className={`w-full py-3.5 font-semibold text-sm transition-all rounded-xl flex items-center justify-center gap-2 ${
                 isCoolingDown || isSubmitting
-                  ? "bg-white/5 text-[var(--color-cs-text-muted)] cursor-not-allowed"
-                  : "bg-[#EF4444] hover:bg-[#DC2626] text-white active:bg-[#B91C1C] shadow-lg shadow-red-500/25"
+                  ? "bg-white/5 text-gray-400 cursor-not-allowed"
+                  : "bg-[#A50021] hover:bg-[#C20027] text-white active:bg-[#800019] shadow-lg shadow-[#A50021]/30"
               }`}
             >
               {submitStatus === "locating" && (

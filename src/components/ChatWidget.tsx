@@ -143,7 +143,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
       {/* Chat Drawer */}
       {isOpen && (
         <div className="fixed inset-0 sm:absolute sm:inset-auto sm:bottom-16 sm:right-0 sm:w-80 z-30 flex flex-col overflow-hidden">
-          <div className="flex-1 sm:flex-none sm:h-[420px] modal-frame flex flex-col sm:rounded-2xl rounded-none">
+          <div className="flex-1 sm:flex-none sm:h-[420px] bg-black border border-white/20 flex flex-col sm:rounded-2xl rounded-none">
           
             {/* Header */}
             <div className="p-4 pb-3 flex justify-between items-center border-b border-white/10">
@@ -153,14 +153,14 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
               <button
                 onClick={() => setIsOpen(false)}
                 aria-label="Close chat"
-                className="text-[var(--color-cs-text-muted)] hover:text-white w-8 h-8 flex items-center justify-center transition-colors rounded-full hover:bg-white/10 text-lg"
+                className="text-gray-400 hover:text-white w-8 h-8 flex items-center justify-center transition-colors rounded-full hover:bg-white/10 text-lg"
               >
                 ✕
               </button>
             </div>
 
             {/* Sticky Notice */}
-            <div className="text-center py-1.5 text-[10px] text-[var(--color-cs-text-muted)] border-b border-white/5 flex items-center justify-center gap-1">
+            <div className="text-center py-1.5 text-[10px] text-gray-400 border-b border-white/5 flex items-center justify-center gap-1">
               Messages auto-expire after 3 hours
             </div>
 
@@ -169,16 +169,16 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
               {messages.length === 0 ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50 space-y-2">
                   <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
-                  <p className="text-sm text-[var(--color-cs-text-muted)]">No messages yet. Start the conversation!</p>
+                  <p className="text-sm text-gray-400">No messages yet. Start the conversation!</p>
                 </div>
               ) : (
                 messages.map((msg) => (
                   <div key={msg.id} className={`flex flex-col ${msg.username === username ? 'items-end' : 'items-start'}`}>
-                    <span className="text-[10px] text-[var(--color-cs-text-muted)] mb-1">{msg.username}</span>
+                    <span className="text-[10px] text-gray-400 mb-1">{msg.username}</span>
                     <div className={`px-3 py-2 text-sm rounded-2xl max-w-[80%] ${msg.username === username ? 'bg-[#EF4444] text-white rounded-br-sm' : 'bg-white/10 text-white rounded-bl-sm'}`}>
                       {msg.text}
                     </div>
-                    <span className="text-[9px] text-[var(--color-cs-text-muted)] mt-1 opacity-60">
+                    <span className="text-[9px] text-gray-400 mt-1 opacity-60">
                       {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
@@ -195,7 +195,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
                 onChange={(e) => setInputText(e.target.value)}
                 placeholder="Type a message..."
                 maxLength={100}
-                className="flex-1 bg-white/5 border border-white/10 px-3 py-2.5 text-sm rounded-full focus:outline-none focus:border-white/30 transition-colors min-h-[44px] text-white placeholder-[var(--color-cs-text-muted)]"
+                className="flex-1 bg-white/5 border border-white/10 px-3 py-2.5 text-sm rounded-full focus:outline-none focus:border-white/30 transition-colors min-h-[44px] text-white placeholder-gray-400"
               />
               <button
                 type="submit"
