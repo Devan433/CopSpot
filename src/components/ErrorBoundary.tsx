@@ -43,7 +43,7 @@ export default class ErrorBoundary extends React.Component<
           >
             REBOOT
           </button>
-          {this.state.error && (
+          {process.env.NODE_ENV === 'development' && this.state.error && (
             <pre className="mt-6 text-xs text-[var(--color-cs-text-muted)] max-w-md overflow-auto font-mono">
               {this.state.error.message}
             </pre>

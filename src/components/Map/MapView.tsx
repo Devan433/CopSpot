@@ -45,7 +45,7 @@ function BoundsTracker({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds)
 const iconCache = new Map<string, L.DivIcon>();
 
 const MARKER_COLOR = "#EF4444";
-const MARKER_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+const MARKER_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M12 8v5"/><path d="M12 17h.01"/></svg>`;
 
 function getMarkerIcon(isRecent: boolean, opacity: number): L.DivIcon {
   const cacheKey = `${isRecent}-${opacity}`;
@@ -55,16 +55,17 @@ function getMarkerIcon(isRecent: boolean, opacity: number): L.DivIcon {
   const icon = L.divIcon({
     className: "custom-marker",
     html: `<div style="
-      background-color: #1b1b1b;
+      background-color: ${MARKER_COLOR};
+      color: #000;
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 4px solid ${MARKER_COLOR};
+      border: 3px solid #000;
       display: flex;
       align-items: center;
       justify-content: center;
       font-size: 18px;
-      box-shadow: 0 4px 0 0 #000;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.3);
       opacity: ${opacity};
       transition: opacity 0.3s ease;
       ${isRecent ? "animation: pulse-ring 2s infinite;" : ""}
