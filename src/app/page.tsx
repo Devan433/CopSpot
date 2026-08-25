@@ -7,7 +7,7 @@ import InfoModal from "@/components/InfoModal";
 import InstallButton from "@/components/InstallButton";
 import ChatWidget from "@/components/ChatWidget";
 import ToastContainer from "@/components/Toast";
-import { Report, ReportType, MapBounds } from "@/lib/types";
+import { Report, MapBounds } from "@/lib/types";
 import { KERALA_CENTER, REPORT_COOLDOWN_MS } from "@/lib/constants";
 import { supabase } from "@/lib/supabase";
 import { useToast } from "@/lib/useToast";
@@ -15,7 +15,6 @@ import { useToast } from "@/lib/useToast";
 function mapDbRowToReport(d: Record<string, unknown>): Report {
   return {
     id: d.id as string,
-    type: (d.type as ReportType) || "checking",
     latitude: d.latitude as number,
     longitude: d.longitude as number,
     description: (d.description as string) || "",
@@ -149,7 +148,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleReportSubmit = async (type: ReportType, desc: string, location: { lat: number; lng: number } | null) => {
+  const handleReportSubmit = async (desc: string, location: { lat: number; lng: number } | null) => {
     const now = Date.now();
     if (now - lastReportTime < REPORT_COOLDOWN_MS) {
       showToast("Please wait before submitting another report.", "warning");
@@ -165,7 +164,7 @@ export default function Home() {
     setCooldownRemaining(REPORT_COOLDOWN_MS);
 
     const { error } = await supabase.from('reports').insert({
-      type,
+
       description: desc,
       latitude,
       longitude,

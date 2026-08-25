@@ -3,8 +3,8 @@
 import { useEffect, useMemo } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import L from "leaflet";
-import { KERALA_CENTER, DEFAULT_ZOOM, REPORT_CONFIG } from "@/lib/constants";
-import { Report, ReportType, MapBounds } from "@/lib/types";
+import { KERALA_CENTER, DEFAULT_ZOOM } from "@/lib/constants";
+import { Report, MapBounds } from "@/lib/types";
 import "leaflet/dist/leaflet.css";
 
 // Helper to center map
@@ -44,12 +44,14 @@ function BoundsTracker({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds)
 // Memoized icon cache to avoid re-creating L.divIcon on every render
 const iconCache = new Map<string, L.DivIcon>();
 
-function getMarkerIcon(type: ReportType, isRecent: boolean, opacity: number): L.DivIcon {
-  const cacheKey = `${type}-${isRecent}-${opacity}`;
+const MARKER_COLOR = "#EF4444";
+const MARKER_ICON = `<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>`;
+
+function getMarkerIcon(isRecent: boolean, opacity: number): L.DivIcon {
+  const cacheKey = `${isRecent}-${opacity}`;
   const cached = iconCache.get(cacheKey);
   if (cached) return cached;
 
-  const config = REPORT_CONFIG[type];
   const icon = L.divIcon({
     className: "custom-marker",
     html: `<div style="
@@ -57,7 +59,7 @@ function getMarkerIcon(type: ReportType, isRecent: boolean, opacity: number): L.
       width: 36px;
       height: 36px;
       border-radius: 50%;
-      border: 4px solid ${config.color};
+      border: 4px solid ${MARKER_COLOR};
       display: flex;
       align-items: center;
       justify-content: center;
@@ -66,7 +68,7 @@ function getMarkerIcon(type: ReportType, isRecent: boolean, opacity: number): L.
       opacity: ${opacity};
       transition: opacity 0.3s ease;
       ${isRecent ? "animation: pulse-ring 2s infinite;" : ""}
-    ">${config.icon}</div>`,
+    ">${MARKER_ICON}</div>`,
     iconSize: [36, 36],
     iconAnchor: [18, 18],
     popupAnchor: [0, -18]
@@ -86,8 +88,7 @@ export default function MapView({ reports, centerOn, onVote, onBoundsChange }: {
     // If less than 15 minutes remaining, fade out to 50% opacity
     const opacity = timeRemainingMs < 15 * 60000 ? 0.5 : 1;
     
-    const icon = getMarkerIcon(report.type, isRecent, opacity);
-    const config = REPORT_CONFIG[report.type];
+    const icon = getMarkerIcon(isRecent, opacity);
     const minutesAgo = Math.floor((Date.now() - new Date(report.created_at).getTime()) / 60000);
 
     return (
@@ -98,8 +99,8 @@ export default function MapView({ reports, centerOn, onVote, onBoundsChange }: {
       >
         <Popup>
           <div className="flex flex-col gap-2">
-            <div className="font-bold text-[var(--color-cs-cyan)] text-sm mb-1 uppercase flex items-center gap-1 font-mono tracking-wider">
-              <span dangerouslySetInnerHTML={{ __html: config.icon }} /> {config.label}
+            <div className="font-bold text-[var(--color-cs-red)] text-sm mb-1 uppercase flex items-center gap-1 font-mono tracking-wider">
+              <span dangerouslySetInnerHTML={{ __html: MARKER_ICON }} /> SIGHTING
             </div>
             <div className="text-xs text-gray-400">
               Reported {minutesAgo < 1 ? "just now" : `${minutesAgo} min ago`}

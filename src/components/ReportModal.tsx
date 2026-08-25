@@ -1,11 +1,8 @@
 import { useState } from "react";
-import { MAX_DESCRIPTION_LENGTH, REPORT_CONFIG } from "@/lib/constants";
-import { ReportType } from "@/lib/types";
+import { MAX_DESCRIPTION_LENGTH } from "@/lib/constants";
 import { Filter } from "bad-words";
 
 const profanityFilter = new Filter();
-
-const REPORT_TYPES: ReportType[] = ["checking", "traffic", "accident", "hazard", "other"];
 
 export default function ReportModal({
   onClose,
@@ -14,11 +11,11 @@ export default function ReportModal({
   showToast,
 }: {
   onClose: () => void;
-  onSubmit: (type: ReportType, desc: string, location: { lat: number; lng: number } | null) => void;
+  onSubmit: (desc: string, location: { lat: number; lng: number } | null) => void;
   cooldownRemaining?: number;
   showToast?: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
-  const [selectedType, setSelectedType] = useState<ReportType>("checking");
+
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitStatus, setSubmitStatus] = useState<"idle" | "locating" | "transmitting">("idle");
@@ -38,18 +35,18 @@ export default function ReportModal({
       navigator.geolocation.getCurrentPosition(
         (pos) => {
           setSubmitStatus("transmitting");
-          onSubmit(selectedType, description, { lat: pos.coords.latitude, lng: pos.coords.longitude });
+          onSubmit(description, { lat: pos.coords.latitude, lng: pos.coords.longitude });
         },
         () => {
           showToast?.("Could not get exact GPS, using map center instead.", "warning");
           setSubmitStatus("transmitting");
-          onSubmit(selectedType, description, null);
+          onSubmit(description, null);
         },
         { enableHighAccuracy: true, timeout: 10000 }
       );
     } else {
       setSubmitStatus("transmitting");
-      onSubmit(selectedType, description, null);
+      onSubmit(description, null);
     }
   };
 
@@ -77,41 +74,7 @@ export default function ReportModal({
           </div>
 
           <div className="px-5 pb-5">
-            {/* Report Type Selector */}
-            <div className="mb-5">
-              <label className="text-[var(--color-cs-text-muted)] text-xs font-medium uppercase tracking-wider mb-2 block">
-                Sighting Type
-              </label>
-              <div className="grid grid-cols-5 gap-2">
-                {REPORT_TYPES.map((type) => {
-                  const config = REPORT_CONFIG[type];
-                  const isSelected = selectedType === type;
-                  return (
-                    <button
-                      key={type}
-                      type="button"
-                      onClick={() => setSelectedType(type)}
-                      className={`flex flex-col items-center gap-1.5 py-3 px-1 rounded-xl border transition-all text-center ${
-                        isSelected
-                          ? "border-white/30 bg-white/10"
-                          : "border-transparent bg-white/5 hover:bg-white/8"
-                      }`}
-                    >
-                      <span
-                        className="flex items-center justify-center w-8 h-8 rounded-full transition-colors"
-                        style={{ backgroundColor: isSelected ? config.color + '22' : 'transparent', color: config.color }}
-                        dangerouslySetInnerHTML={{ __html: config.icon }}
-                      />
-                      <span className={`text-[9px] font-medium uppercase tracking-wider leading-tight ${
-                        isSelected ? 'text-white' : 'text-[var(--color-cs-text-muted)]'
-                      }`}>
-                        {config.label}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+
 
             {/* Notes Section */}
             <div className="mb-5">
