@@ -8,11 +8,9 @@ interface BeforeInstallPromptEvent extends Event {
   prompt(): Promise<void>;
 }
 
-function isInAppBrowser(): boolean {
+function isMobile(): boolean {
   if (typeof navigator === "undefined") return false;
-  const ua = navigator.userAgent || navigator.vendor || "";
-  // Detect common in-app browsers: Instagram, Facebook, WhatsApp, Telegram, Snapchat, Twitter, LinkedIn
-  return /FBAN|FBAV|Instagram|WhatsApp|Telegram|Snapchat|Twitter|LinkedInApp|Line\//i.test(ua);
+  return /Android|iPhone|iPad|iPod|webOS|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
 }
 
 function isIOS(): boolean {
@@ -29,43 +27,49 @@ function isStandalone(): boolean {
 export default function InstallButton() {
   const [deferredPrompt, setDeferredPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [showNativeInstall, setShowNativeInstall] = useState(false);
-  const [showOpenInBrowser, setShowOpenInBrowser] = useState(false);
-  const [showIOSGuide, setShowIOSGuide] = useState(false);
+  const [showManualInstall, setShowManualInstall] = useState(false);
   const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    // Don't show anything if already installed as PWA
+    // Already installed or not on mobile — do nothing
     if (isStandalone()) return;
-
-    // Check if dismissed in this session
     if (sessionStorage.getItem("copspot_install_dismissed")) {
       setDismissed(true);
       return;
     }
 
-    // Case 1: In-app browser (WhatsApp, Instagram, etc.)
-    if (isInAppBrowser()) {
-      setShowOpenInBrowser(true);
-      return;
-    }
-
-    // Case 2: iOS Safari (no beforeinstallprompt support)
+    // iOS: always show the manual guide
     if (isIOS()) {
-      setShowIOSGuide(true);
+      setShowManualInstall(true);
       return;
     }
 
-    // Case 3: Normal browser — listen for install prompt
+    let promptReceived = false;
+
     const handleBeforeInstallPrompt = (e: Event) => {
       e.preventDefault();
+      promptReceived = true;
       setDeferredPrompt(e as BeforeInstallPromptEvent);
       setShowNativeInstall(true);
+      setShowManualInstall(false);
     };
 
     window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
 
+    // On mobile: if the install prompt hasn't fired after 3 seconds,
+    // the user is likely in an in-app browser (WhatsApp, Instagram, etc.)
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    if (isMobile()) {
+      timer = setTimeout(() => {
+        if (!promptReceived) {
+          setShowManualInstall(true);
+        }
+      }, 3000);
+    }
+
     return () => {
       window.removeEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+      if (timer) clearTimeout(timer);
     };
   }, []);
 
@@ -81,53 +85,44 @@ export default function InstallButton() {
 
   const handleDismiss = () => {
     setDismissed(true);
-    setShowOpenInBrowser(false);
-    setShowIOSGuide(false);
+    setShowManualInstall(false);
     setShowNativeInstall(false);
     sessionStorage.setItem("copspot_install_dismissed", "true");
   };
 
   const handleOpenInChrome = () => {
-    // intent:// URL scheme forces Android to open in Chrome
-    const url = window.location.href;
-    window.location.href = `intent://${url.replace(/^https?:\/\//, "")}#Intent;scheme=https;package=com.android.chrome;end;`;
+    const url = window.location.href.replace(/^https?:\/\//, "");
+    window.location.href = `intent://${url}#Intent;scheme=https;package=com.android.chrome;end;`;
   };
 
   if (dismissed || isStandalone()) return null;
 
-  // Banner for in-app browsers (WhatsApp, Instagram, etc.)
-  if (showOpenInBrowser) {
+  // Manual install banner (in-app browser or iOS)
+  if (showManualInstall) {
     return (
       <div className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#0d2137] to-[#14375b] border-b border-white/10 px-4 py-3 flex items-center gap-3 shadow-lg">
         <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-semibold">Install CopSpot</p>
-          <p className="text-gray-400 text-xs">Open in Chrome to install this app</p>
+          <p className="text-white text-sm font-semibold">📲 Install CopSpot</p>
+          {isIOS() ? (
+            <p className="text-gray-400 text-xs">Tap <span className="text-white">Share ↑</span> → <span className="text-white">&quot;Add to Home Screen&quot;</span></p>
+          ) : (
+            <p className="text-gray-400 text-xs">Open in Chrome to install as an app</p>
+          )}
         </div>
-        <button
-          onClick={handleOpenInChrome}
-          className="px-4 py-2 bg-[#EF4444] text-white text-xs font-bold rounded-lg whitespace-nowrap"
-        >
-          Open in Chrome
-        </button>
-        <button onClick={handleDismiss} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
+        {!isIOS() && (
+          <button
+            onClick={handleOpenInChrome}
+            className="px-4 py-2 bg-[#EF4444] text-white text-xs font-bold rounded-lg whitespace-nowrap active:bg-red-600"
+          >
+            Open Chrome
+          </button>
+        )}
+        <button onClick={handleDismiss} className="text-gray-500 hover:text-white text-lg leading-none p-1">✕</button>
       </div>
     );
   }
 
-  // Banner for iOS Safari
-  if (showIOSGuide) {
-    return (
-      <div className="fixed top-0 left-0 right-0 z-[9999] bg-gradient-to-r from-[#0d2137] to-[#14375b] border-b border-white/10 px-4 py-3 flex items-center gap-3 shadow-lg">
-        <div className="flex-1 min-w-0">
-          <p className="text-white text-sm font-semibold">Install CopSpot</p>
-          <p className="text-gray-400 text-xs">Tap <span className="text-white">Share ↑</span> then <span className="text-white">&quot;Add to Home Screen&quot;</span></p>
-        </div>
-        <button onClick={handleDismiss} className="text-gray-500 hover:text-white text-lg leading-none">✕</button>
-      </div>
-    );
-  }
-
-  // Standard install button for Chrome/Edge
+  // Native install button for Chrome/Edge
   if (showNativeInstall) {
     return (
       <button
