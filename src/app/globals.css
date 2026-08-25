@@ -32,72 +32,65 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
-/* ===== COPSPOT MASTER FRAME ===== */
-.master-frame {
+/* ===== FLOATING ACTION BUTTONS ===== */
+.btn-fab {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: white;
+  color: #334155;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(0, 0, 0, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-fab:hover {
+  background: #f1f5f9;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  transform: scale(1.05);
+}
+.btn-fab:active {
+  transform: scale(0.95);
+  background: #e2e8f0;
+}
+
+.btn-fab-primary {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #EF4444;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.5), 0 2px 6px rgba(0, 0, 0, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-fab-primary:hover {
+  background: #DC2626;
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.6);
+  transform: scale(1.08);
+}
+.btn-fab-primary:active {
+  transform: scale(0.95);
+  background: #B91C1C;
+}
+
+/* ===== MODAL STYLES ===== */
+.modal-frame {
   background: var(--color-cs-base);
   border: 1px solid var(--color-cs-border-light);
-  box-shadow: inset 0 0 0 4px var(--color-cs-frame), inset 0 0 0 5px var(--color-cs-border);
-  position: relative;
-  border-radius: 8px; /* Slightly softened outer edge */
+  border-radius: 16px;
   overflow: hidden;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6);
 }
 
-/* Corner bracket accents */
-.master-frame::before,
-.master-frame::after {
-  content: '';
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  border: 3px solid var(--color-cs-cyan);
-  pointer-events: none;
-  z-index: 50;
-}
-.master-frame::before {
-  top: 5px; left: 5px;
-  border-right: none;
-  border-bottom: none;
-}
-.master-frame::after {
-  bottom: 5px; right: 5px;
-  border-left: none;
-  border-top: none;
-}
-
-/* ===== INTEGRATED PANELS ===== */
-/* Panels float OVER the map but attach flush to the master frame */
-.anchored-panel {
-  background: var(--color-cs-panel);
-  backdrop-filter: blur(4px);
-  border: 1px solid var(--color-cs-border);
-  pointer-events: auto;
-}
-
-.anchored-top-left {
-  border-top: none;
-  border-left: none;
-  border-bottom-right-radius: 6px;
-}
-
-.anchored-top-right {
-  border-top: none;
-  border-right: none;
-  border-bottom-left-radius: 6px;
-}
-
-.anchored-top-center {
-  border-top: none;
-  border-bottom-left-radius: 6px;
-  border-bottom-right-radius: 6px;
-}
-
-.anchored-bottom-bar {
-  border-bottom: none;
-  border-left: none;
-  border-right: none;
-}
-
-/* ===== CONTROLS ===== */
+/* ===== CONTROLS (kept for modals) ===== */
 .btn-primary {
   background: var(--color-cs-red);
   color: #fff;
@@ -106,6 +99,7 @@ body {
   letter-spacing: 0.1em;
   transition: all 0.15s ease;
   border: 1px solid #B91C1C;
+  border-radius: 12px;
 }
 .btn-primary:hover {
   background: #DC2626;
@@ -125,6 +119,7 @@ body {
   background: var(--color-cs-frame);
   color: var(--color-cs-cyan);
   border: 1px solid var(--color-cs-border);
+  border-radius: 12px;
   transition: all 0.15s ease;
 }
 .btn-secondary:hover {
@@ -135,18 +130,6 @@ body {
   background: var(--color-cs-base);
 }
 
-.btn-icon {
-  background: var(--color-cs-frame);
-  color: var(--color-cs-text-muted);
-  border: 1px solid var(--color-cs-border);
-  transition: all 0.15s ease;
-}
-.btn-icon:hover {
-  background: var(--color-cs-border);
-  color: var(--color-cs-text);
-  border-color: var(--color-cs-border-light);
-}
-
 /* ===== LEAFLET OVERRIDES ===== */
 .leaflet-container {
   background: var(--color-cs-base) !important;
@@ -154,19 +137,16 @@ body {
 }
 
 .leaflet-popup-content-wrapper {
-  background: var(--color-cs-panel) !important;
-  color: var(--color-cs-text) !important;
-  border: 1px solid var(--color-cs-border);
-  border-radius: 4px !important;
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.7) !important;
-  backdrop-filter: blur(4px);
+  background: white !important;
+  color: #1e293b !important;
+  border: none;
+  border-radius: 12px !important;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3) !important;
 }
 
 .leaflet-popup-tip {
-  background: var(--color-cs-panel) !important;
-  border: 1px solid var(--color-cs-border);
-  border-top: none;
-  border-left: none;
+  background: white !important;
+  border: none;
 }
 
 .leaflet-popup-content {

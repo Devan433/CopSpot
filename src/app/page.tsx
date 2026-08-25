@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import MapContainer from "@/components/Map/MapContainer";
 import ReportModal from "@/components/ReportModal";
 import InfoModal from "@/components/InfoModal";
@@ -323,107 +323,70 @@ export default function Home() {
     return !isExpired && !isHighlyDenied;
   });
 
-  const tickerText = useMemo(() => {
-    if (activeReports.length === 0) return "SYS.STATUS: CLEAR // NO ACTIVE SIGHTINGS";
-    const recent = activeReports.slice(0, 5).map(r => {
-      const mins = Math.floor((Date.now() - new Date(r.created_at).getTime()) / 60000);
-      const timeStr = mins < 1 ? "JUST NOW" : `${mins}M AGO`;
-      return `REPORT LOGGED ${timeStr} ${r.description ? `[${r.description.toUpperCase()}]` : ""}`;
-    });
-    return recent.join(" // ");
-  }, [activeReports]);
+
 
   return (
-    <main className="w-screen h-screen overflow-hidden p-2 md:p-6 bg-[var(--color-cs-base)] text-[var(--color-cs-text)]">
+    <main className="w-screen h-screen overflow-hidden bg-[var(--color-cs-base)]">
       <ToastContainer toasts={toasts} onDismiss={dismissToast} />
 
-      {/* MASTER FRAME CONTAINING THE WHOLE UI */}
-      <div className="master-frame w-full h-full max-w-7xl mx-auto flex flex-col relative">
-        
-        {/* THE MAP (Background Layer) */}
-        <div className="absolute inset-0 z-0">
-          {isLoading ? (
-            <div className="w-full h-full flex flex-col items-center justify-center font-mono text-[var(--color-cs-text-muted)] bg-[var(--color-cs-base)]">
-              <div className="w-6 h-6 border-2 border-[var(--color-cs-cyan)] border-t-transparent rounded-full animate-spin mb-4" />
-              INITIALIZING RADAR...
-            </div>
-          ) : (
-            <MapContainer reports={activeReports} centerOn={mapCenter} onVote={handleVote} onBoundsChange={handleBoundsChange} />
-          )}
+      {/* Full-screen Map */}
+      <div className="w-full h-full relative">
+        {isLoading ? (
+          <div className="w-full h-full flex flex-col items-center justify-center text-[var(--color-cs-text-muted)]">
+            <div className="w-8 h-8 border-2 border-[#EF4444] border-t-transparent rounded-full animate-spin mb-4" />
+            <span className="text-sm opacity-60">Loading map...</span>
+          </div>
+        ) : (
+          <MapContainer reports={activeReports} centerOn={mapCenter} onVote={handleVote} onBoundsChange={handleBoundsChange} />
+        )}
+      </div>
+
+      {/* Floating UI Overlay */}
+      <div className="fixed inset-0 z-10 pointer-events-none">
+
+        {/* Top Left: Install button */}
+        <div className="absolute top-4 left-4 pointer-events-auto">
+          <InstallButton />
         </div>
 
-        {/* OVERLAY UI (Foreground Layer) */}
-        <div className="absolute inset-0 z-10 pointer-events-none flex flex-col justify-between">
-          
-          {/* TOP SECTION */}
-          <div className="flex justify-between items-start pointer-events-none">
-            {/* Top Left Identity */}
-            <div className="anchored-panel anchored-top-left px-4 md:px-8 py-3 md:py-5 flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full bg-[var(--color-cs-cyan)] animate-pulse" />
-              <h1 className="text-[var(--color-cs-text)] font-bold text-sm md:text-lg tracking-widest flex items-center gap-2 m-0 leading-none">
-                <span className="text-[var(--color-cs-text-muted)] font-mono font-normal">CS//</span>
-                COPSPOT
-              </h1>
-            </div>
-
-            {/* Top Center Status overlay */}
-            <div className="hidden md:flex anchored-panel anchored-top-center px-8 py-2 items-center gap-4 border-t-0">
-              <span className="text-[var(--color-cs-text-muted)] text-[10px] font-mono tracking-widest">ACTIVE SIGHTINGS</span>
-              <span className="text-[var(--color-cs-cyan)] font-mono font-bold text-lg leading-none">{String(activeReports.length).padStart(3, '0')}</span>
-            </div>
-
-            {/* Top Right Guidelines */}
-            <div className="anchored-panel anchored-top-right">
-              <button
-                onClick={() => setIsInfoOpen(true)}
-                aria-label="Guidelines"
-                className="w-12 h-12 md:w-16 md:h-16 flex items-center justify-center text-[var(--color-cs-text-muted)] hover:text-white hover:bg-[var(--color-cs-border)] transition-colors pointer-events-auto"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* SIDES (Middle Controls) */}
-          <div className="flex-1 flex justify-between items-end p-4 md:p-6 pointer-events-none">
-            {/* Bottom Left Controls */}
-            <div className="flex flex-col gap-4 pointer-events-auto">
-              <InstallButton />
-              <ChatWidget showToast={showToast} />
-            </div>
-
-            {/* Bottom Right Controls */}
-            <div className="pointer-events-auto">
-              <button
-                onClick={handleLocateUser}
-                className="btn-icon w-12 h-12 md:w-14 md:h-14 rounded-sm shadow-xl flex items-center justify-center"
-                aria-label="Locate Me"
-              >
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><path d="m22 12-3 0"/><path d="m5 12-3 0"/><path d="m12 22 0-3"/><path d="m12 5 0-3"/></svg>
-              </button>
-            </div>
-          </div>
-
-          {/* BOTTOM SECTION */}
-          <div className="anchored-panel anchored-bottom-bar flex flex-col md:flex-row gap-0 pointer-events-auto">
-            {/* Ticker Information */}
-            <div className="flex-1 overflow-hidden flex items-center px-4 py-3 md:py-0 border-b md:border-b-0 md:border-r border-[var(--color-cs-border)]">
-              <div className="text-[var(--color-cs-orange)] font-mono text-[10px] md:text-xs whitespace-nowrap animate-[ticker-scroll_30s_linear_infinite] w-full tracking-widest">
-                {tickerText}
-              </div>
-            </div>
-            
-            {/* Primary Action Button */}
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="btn-primary w-full md:w-auto px-8 py-4 md:py-6 flex items-center justify-center gap-3 shrink-0"
-            >
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-              TRANSMIT REPORT
-            </button>
-          </div>
-
+        {/* Top Right: Info button */}
+        <div className="absolute top-4 right-4 pointer-events-auto">
+          <button
+            onClick={() => setIsInfoOpen(true)}
+            aria-label="Guidelines"
+            className="btn-fab"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          </button>
         </div>
+
+        {/* Bottom Left: Chat */}
+        <div className="absolute bottom-6 left-[12%] pointer-events-auto">
+          <ChatWidget showToast={showToast} />
+        </div>
+
+        {/* Bottom Center: Report button (large red) */}
+        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto">
+          <button
+            onClick={() => setIsModalOpen(true)}
+            className="btn-fab-primary"
+            aria-label="Report sighting"
+          >
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          </button>
+        </div>
+
+        {/* Bottom Right: Locate me */}
+        <div className="absolute bottom-6 right-[12%] pointer-events-auto">
+          <button
+            onClick={handleLocateUser}
+            className="btn-fab"
+            aria-label="Locate Me"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><path d="m22 12-3 0"/><path d="m5 12-3 0"/><path d="m12 22 0-3"/><path d="m12 5 0-3"/></svg>
+          </button>
+        </div>
+
       </div>
 
       {isModalOpen && (
