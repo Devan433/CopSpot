@@ -56,7 +56,7 @@ body {
 }
 
 .btn-fab:hover {
-  background: rgba(15, 23, 42, 0.9); /* More opaque on hover */
+  background: rgba(30, 41, 59, 0.7); /* Slightly lighter tint, still transparent */
   border-color: rgba(255, 255, 255, 0.3);
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
   transform: scale(1.05);
@@ -64,7 +64,7 @@ body {
 
 .btn-fab:active {
   transform: scale(0.95);
-  background: rgba(15, 23, 42, 0.95);
+  background: rgba(15, 23, 42, 0.8); /* Keep it transparent enough for blur */
   border-color: rgba(255, 255, 255, 0.1);
 }
 

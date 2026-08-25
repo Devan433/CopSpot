@@ -361,7 +361,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Left: Chat */}
-        <div className="absolute bottom-17 left-[12%] pointer-events-auto">
+        <div className="absolute bottom-18 left-[12%] pointer-events-auto">
           <ChatWidget showToast={showToast} />
         </div>
 
@@ -377,7 +377,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Right: Locate me */}
-        <div className="absolute bottom-17 right-[12%] pointer-events-auto">
+        <div className="absolute bottom-18 right-[12%] pointer-events-auto">
           <button
             onClick={handleLocateUser}
             className="btn-fab"
