@@ -44,6 +44,53 @@ export default function InfoModal({ onClose }: { onClose: () => void }) {
               <h3 className="text-white font-semibold mb-1 text-sm">4. Cooperate</h3>
               <p>We are a community looking out for each other. Be respectful, accurate, and helpful.</p>
             </div>
+
+            {/* Legal Disclaimer */}
+            <div className="border-t border-white/10 pt-4 mt-4">
+              <h3 className="text-yellow-400 font-bold mb-2 text-sm">⚠️ Legal Disclaimer</h3>
+              
+              <div className="space-y-3 text-xs text-gray-400 leading-relaxed">
+                <p>
+                  <strong className="text-gray-300">Purpose:</strong> CopSpot is designed solely for community awareness, traffic safety, and responsible driving. This app is intended to help users stay alert, follow traffic rules, and drive safely.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">Prohibited Use:</strong> Do not use this app to evade law enforcement, avoid legal checkpoints (including DUI/sobriety checkpoints), or engage in any illegal activities. Any such use is strictly against our terms and is the sole responsibility of the user.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">Compliance with Authorities:</strong> CopSpot fully respects and supports law enforcement efforts to maintain public safety. If any law enforcement agency or government authority requests the removal or modification of this service, we will comply promptly and fully.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">No Guarantee of Accuracy:</strong> All reports are user-generated and unverified. CopSpot makes no guarantees about the accuracy, timeliness, or reliability of any information displayed. Do not rely on this app for making any safety-critical decisions.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">User Responsibility:</strong> By using CopSpot, you agree that you are solely responsible for your actions. You must comply with all applicable local, state, and national laws at all times. Obey all traffic laws regardless of information shown in this app.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">Limitation of Liability:</strong> CopSpot and its developers are not liable for any damages, legal consequences, fines, or injuries arising from the use or misuse of this application. This app is provided &quot;as is&quot; without warranties of any kind.
+                </p>
+
+                <p className="text-gray-500 italic">
+                  By continuing to use CopSpot, you acknowledge that you have read, understood, and agreed to these terms.
+                </p>
+
+                <p>
+                  <strong className="text-gray-300">Contact:</strong> For legal inquiries, takedown requests, or feedback, please{' '}
+                  <a
+                    href="https://docs.google.com/forms/d/e/1FAIpQLSekIlvzF8rCGDWdIxguSMNAXDdSovlPumKur9qGoEyvKs0q0A/viewform"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-400 underline hover:text-blue-300"
+                  >
+                    contact us here
+                  </a>.
+                </p>
+              </div>
+            </div>
           </div>
 
           <div className="p-5">
