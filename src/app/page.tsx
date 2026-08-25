@@ -361,12 +361,12 @@ export default function Home() {
         </div>
 
         {/* Bottom Left: Chat */}
-        <div className="absolute bottom-12 left-[12%] pointer-events-auto">
+        <div className="absolute bottom-17 left-[12%] pointer-events-auto">
           <ChatWidget showToast={showToast} />
         </div>
 
         {/* Bottom Center: Report button (large red) */}
-        <div className="absolute bottom-12 left-1/2 -translate-x-1/2 pointer-events-auto">
+        <div className="absolute bottom-15 left-1/2 -translate-x-1/2 pointer-events-auto">
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn-fab-primary"
@@ -377,7 +377,7 @@ export default function Home() {
         </div>
 
         {/* Bottom Right: Locate me */}
-        <div className="absolute bottom-12 right-[12%] pointer-events-auto">
+        <div className="absolute bottom-17 right-[12%] pointer-events-auto">
           <button
             onClick={handleLocateUser}
             className="btn-fab"
