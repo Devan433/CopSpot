@@ -100,7 +100,7 @@ export default function Home() {
           .order('created_at', { ascending: false })
           .limit(100);
       }
-        
+
       if (result.error) {
         console.error("Error fetching reports:", result.error);
         showToast("Failed to load reports. Check your connection.", "error");
@@ -146,7 +146,7 @@ export default function Home() {
     return () => {
       supabase.removeChannel(channel);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleReportSubmit = async (type: ReportType, desc: string, location: { lat: number; lng: number } | null) => {
@@ -158,7 +158,7 @@ export default function Home() {
 
     const latitude = location ? location.lat : (mapCenter ? mapCenter[0] : KERALA_CENTER[0]);
     const longitude = location ? location.lng : (mapCenter ? mapCenter[1] : KERALA_CENTER[1]);
-    
+
     setIsModalOpen(false);
     setMapCenter([latitude, longitude]);
     setLastReportTime(now);
@@ -251,17 +251,17 @@ export default function Home() {
     if (error) {
       console.error("Error updating vote:", error);
       showToast(`Vote failed: ${error.message || 'Check database permissions'}`, "error");
-      
+
       votedReports.delete(reportId);
       const arr = Array.from(votedReports);
       localStorage.setItem("copspot_voted", JSON.stringify(arr));
-      
+
       setReports(prev => prev.map(r => {
         if (r.id === reportId) return reportToUpdate;
         return r;
       }));
     }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reports, votedReports]);
 
   const handleLocateUser = () => {
@@ -314,7 +314,7 @@ export default function Home() {
     return () => {
       if (boundsTimeoutRef.current) clearTimeout(boundsTimeoutRef.current);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mapBounds]);
 
   const activeReports = reports.filter(r => {
@@ -356,42 +356,42 @@ export default function Home() {
             aria-label="Guidelines"
             className="btn-fab"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4" /><path d="M12 8h.01" /></svg>
           </button>
         </div>
 
         {/* Bottom Left: Chat */}
-        <div className="absolute bottom-6 left-[12%] pointer-events-auto">
+        <div className="absolute bottom-9 left-[12%] pointer-events-auto">
           <ChatWidget showToast={showToast} />
         </div>
 
         {/* Bottom Center: Report button (large red) */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 pointer-events-auto">
+        <div className="absolute bottom-9 left-1/2 -translate-x-1/2 pointer-events-auto">
           <button
             onClick={() => setIsModalOpen(true)}
             className="btn-fab-primary"
             aria-label="Report sighting"
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /></svg>
           </button>
         </div>
 
         {/* Bottom Right: Locate me */}
-        <div className="absolute bottom-6 right-[12%] pointer-events-auto">
+        <div className="absolute bottom-9 right-[12%] pointer-events-auto">
           <button
             onClick={handleLocateUser}
             className="btn-fab"
             aria-label="Locate Me"
           >
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="2"/><path d="m22 12-3 0"/><path d="m5 12-3 0"/><path d="m12 22 0-3"/><path d="m12 5 0-3"/></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10" /><circle cx="12" cy="12" r="2" /><path d="m22 12-3 0" /><path d="m5 12-3 0" /><path d="m12 22 0-3" /><path d="m12 5 0-3" /></svg>
           </button>
         </div>
 
       </div>
 
       {isModalOpen && (
-        <ReportModal 
-          onClose={() => setIsModalOpen(false)} 
+        <ReportModal
+          onClose={() => setIsModalOpen(false)}
           onSubmit={handleReportSubmit}
           cooldownRemaining={cooldownRemaining}
           showToast={showToast}
