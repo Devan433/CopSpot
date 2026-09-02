@@ -98,6 +98,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
     e.preventDefault();
     if (!inputText.trim() || cooldown > 0 || isSending) return;
 
+    // Client-side profanity check for instant UX feedback (server validates too)
     if (profanityFilter.isProfane(inputText)) {
       showToast?.("Please keep the chat respectful. Profane language is not allowed.", "warning");
       return;
@@ -105,20 +106,35 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
 
     setIsSending(true);
 
-    const { error } = await supabase.from('messages').insert({
-      text: inputText.trim(),
-      username: username
-    });
+    try {
+      const res = await fetch('/api/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: inputText.trim(), username }),
+      });
 
-    setIsSending(false);
+      if (res.status === 429) {
+        const data = await res.json();
+        showToast?.(data.error || "Too many messages. Please slow down.", "warning");
+        setIsSending(false);
+        return;
+      }
 
-    if (error) {
-      console.error("Error sending message:", error);
-      showToast?.("Failed to send message.", "error");
-    } else {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }));
+        showToast?.(data.error || "Failed to send message.", "error");
+        setIsSending(false);
+        return;
+      }
+
       setInputText("");
       setCooldown(3);
+    } catch (err) {
+      console.error("Error sending message:", err);
+      showToast?.("Failed to send message.", "error");
     }
+
+    setIsSending(false);
   };
 
   return (

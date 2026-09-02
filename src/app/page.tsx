@@ -194,19 +194,29 @@ export default function Home() {
     setLastReportTime(now);
     setCooldownRemaining(REPORT_COOLDOWN_MS);
 
-    const { error } = await supabase.from('reports').insert({
+    try {
+      const res = await fetch('/api/reports', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ description: desc, latitude, longitude }),
+      });
 
-      description: desc,
-      latitude,
-      longitude,
-      expires_at: new Date(Date.now() + 60 * 60000).toISOString()
-    });
+      if (res.status === 429) {
+        const data = await res.json();
+        showToast(data.error || "Too many reports. Please try again later.", "warning");
+        return;
+      }
 
-    if (error) {
-      console.error("Error inserting report:", error);
-      showToast(`Failed to submit report: ${error.message || 'Check Supabase RLS policies'}`, "error");
-    } else {
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }));
+        showToast(`Failed to submit report: ${data.error}`, "error");
+        return;
+      }
+
       showToast("Report transmitted successfully!", "success");
+    } catch (err) {
+      console.error("Error submitting report:", err);
+      showToast("Failed to submit report. Check your connection.", "error");
     }
   };
 
@@ -243,44 +253,48 @@ export default function Home() {
     votedReports.add(reportId);
     saveVotedReport(reportId);
 
-    // Try atomic RPC first (prevents race condition + server-side dedup)
-    const { error: rpcError } = await supabase.rpc('vote_on_report', {
-      p_report_id: reportId,
-      p_vote_type: voteType,
-      p_new_expires_at: voteType === 'confirm' ? newExpiresAt : null,
-      p_voter_fingerprint: getVoterFingerprint()
-    });
+    try {
+      const res = await fetch('/api/votes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reportId,
+          voteType,
+          newExpiresAt: voteType === 'confirm' ? newExpiresAt : null,
+          voterFingerprint: getVoterFingerprint(),
+        }),
+      });
 
-    let error = rpcError;
+      if (res.status === 409) {
+        // Already voted (server-side dedup caught it)
+        showToast("You've already voted on this report.", "warning");
+        votedReports.delete(reportId);
+        setReports(prev => prev.map(r => {
+          if (r.id === reportId) return reportToUpdate;
+          return r;
+        }));
+        return;
+      }
 
-    // If RPC says already voted, show warning (server-side caught it)
-    if (rpcError?.code === '23505') {
-      showToast("You've already voted on this report.", "warning");
-      votedReports.delete(reportId);
-      saveVotedReport(reportId); // re-add since server rejected
-      setReports(prev => prev.map(r => {
-        if (r.id === reportId) return reportToUpdate;
-        return r;
-      }));
-      return;
-    }
+      if (res.status === 429) {
+        const data = await res.json();
+        showToast(data.error || "Too many votes. Please slow down.", "warning");
+        // Rollback optimistic update
+        votedReports.delete(reportId);
+        setReports(prev => prev.map(r => {
+          if (r.id === reportId) return reportToUpdate;
+          return r;
+        }));
+        return;
+      }
 
-    // If RPC function doesn't exist yet, fall back to direct update (not atomic)
-    if (rpcError?.code === '42883') {
-      const { error: updateError } = await supabase
-        .from('reports')
-        .update({
-          confirmations: voteType === 'confirm' ? reportToUpdate.confirmations + 1 : reportToUpdate.confirmations,
-          denials: voteType === 'deny' ? reportToUpdate.denials + 1 : reportToUpdate.denials,
-          expires_at: newExpiresAt
-        })
-        .eq('id', reportId);
-      error = updateError;
-    }
-
-    if (error) {
-      console.error("Error updating vote:", error);
-      showToast(`Vote failed: ${error.message || 'Check database permissions'}`, "error");
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({ error: 'Unknown error' }));
+        throw new Error(data.error || 'Vote failed');
+      }
+    } catch (err) {
+      console.error("Error updating vote:", err);
+      showToast(`Vote failed: ${err instanceof Error ? err.message : 'Check your connection'}`, "error");
 
       votedReports.delete(reportId);
       const arr = Array.from(votedReports);
