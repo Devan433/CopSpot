@@ -390,6 +390,14 @@ export default function Home() {
       {/* Floating UI Overlay */}
       <div className="fixed inset-0 z-10 pointer-events-none">
 
+        {/* Center Target Pin */}
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[38px] pointer-events-none drop-shadow-xl z-20 transition-transform duration-200">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="#EF4444" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
+            <circle cx="12" cy="10" r="3" fill="black" />
+          </svg>
+        </div>
+
         {/* Top Left: Install button */}
         <div className="absolute top-4 left-4 pointer-events-auto">
           <InstallButton />

@@ -29,25 +29,8 @@ export default function ReportModal({
     }
 
     setIsSubmitting(true);
-    setSubmitStatus("locating");
-
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setSubmitStatus("transmitting");
-          onSubmit(description, { lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        () => {
-          showToast?.("Could not get exact GPS, using map center instead.", "warning");
-          setSubmitStatus("transmitting");
-          onSubmit(description, null);
-        },
-        { enableHighAccuracy: true, timeout: 10000 }
-      );
-    } else {
-      setSubmitStatus("transmitting");
-      onSubmit(description, null);
-    }
+    setSubmitStatus("transmitting");
+    onSubmit(description, null);
   };
 
   const isCoolingDown = (cooldownRemaining ?? 0) > 0;
