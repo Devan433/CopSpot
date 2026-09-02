@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseServer';
+import { getSupabaseAdmin } from '@/lib/supabaseServer';
 import { checkRateLimit, VOTE_LIMIT } from '@/lib/rateLimit';
 
 /**
@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Try atomic RPC first (prevents race condition + server-side dedup)
-    const { error: rpcError } = await supabaseAdmin.rpc('vote_on_report', {
+    const { error: rpcError } = await getSupabaseAdmin().rpc('vote_on_report', {
       p_report_id: reportId,
       p_vote_type: voteType,
       p_new_expires_at: voteType === 'confirm' ? newExpiresAt : null,
@@ -71,7 +71,7 @@ export async function POST(req: NextRequest) {
     // If RPC function doesn't exist, fall back to direct update
     if (rpcError?.code === '42883') {
       // Fetch current report to compute new values
-      const { data: report, error: fetchError } = await supabaseAdmin
+      const { data: report, error: fetchError } = await getSupabaseAdmin()
         .from('reports')
         .select('confirmations, denials')
         .eq('id', reportId)
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Report not found' }, { status: 404 });
       }
 
-      const { error: updateError } = await supabaseAdmin
+      const { error: updateError } = await getSupabaseAdmin()
         .from('reports')
         .update({
           confirmations: voteType === 'confirm' ? report.confirmations + 1 : report.confirmations,

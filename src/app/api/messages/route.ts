@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabaseServer';
+import { getSupabaseAdmin } from '@/lib/supabaseServer';
 import { checkRateLimit, MESSAGE_LIMIT } from '@/lib/rateLimit';
 import { Filter } from 'bad-words';
 
@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
     }
 
     // --- Insert via service role (bypasses RLS) ---
-    const { data, error } = await supabaseAdmin.from('messages').insert({
+    const { data, error } = await getSupabaseAdmin().from('messages').insert({
       text: trimmedText,
       username: trimmedUsername,
     }).select().single();
