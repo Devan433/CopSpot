@@ -167,7 +167,7 @@ export default function Home() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleReportSubmit = async (desc: string, location: { lat: number; lng: number } | null) => {
+  const handleReportSubmit = async (desc: string, location: { lat: number; lng: number } | null, turnstileToken?: string) => {
     const now = Date.now();
     if (now - lastReportTime < REPORT_COOLDOWN_MS) {
       showToast("Please wait before submitting another report.", "warning");
@@ -199,7 +199,7 @@ export default function Home() {
       const res = await fetch('/api/reports', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ description: desc, latitude, longitude }),
+        body: JSON.stringify({ description: desc, latitude, longitude, turnstileToken }),
       });
 
       if (res.status === 429) {

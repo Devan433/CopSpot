@@ -1,8 +1,19 @@
-import { useState } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { MAX_DESCRIPTION_LENGTH } from "@/lib/constants";
 import { Filter } from "bad-words";
 
 const profanityFilter = new Filter();
+
+// Extend window for Turnstile
+declare global {
+  interface Window {
+    turnstile?: {
+      render: (container: string | HTMLElement, options: Record<string, unknown>) => string;
+      reset: (widgetId: string) => void;
+      remove: (widgetId: string) => void;
+    };
+  }
+}
 
 export default function ReportModal({
   onClose,
@@ -11,14 +22,69 @@ export default function ReportModal({
   showToast,
 }: {
   onClose: () => void;
-  onSubmit: (desc: string, location: { lat: number; lng: number } | null) => void;
+  onSubmit: (desc: string, location: { lat: number; lng: number } | null, turnstileToken?: string) => void;
   cooldownRemaining?: number;
   showToast?: (msg: string, type: "success" | "error" | "warning") => void;
 }) {
 
   const [description, setDescription] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [submitStatus, setSubmitStatus] = useState<"idle" | "locating" | "transmitting">("idle");
+  const [submitStatus, setSubmitStatus] = useState<"idle" | "transmitting">("idle");
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
+
+  // Load Turnstile script
+  useEffect(() => {
+    if (!siteKey) return;
+
+    // Check if script already loaded
+    if (document.querySelector('script[src*="turnstile"]')) return;
+
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    document.head.appendChild(script);
+  }, [siteKey]);
+
+  // Render Turnstile widget
+  const renderWidget = useCallback(() => {
+    if (!siteKey || !turnstileRef.current || !window.turnstile) return;
+    if (widgetIdRef.current) return; // Already rendered
+
+    widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: siteKey,
+      theme: 'dark',
+      size: 'compact',
+      callback: (token: string) => {
+        setTurnstileToken(token);
+      },
+      'error-callback': () => {
+        setTurnstileToken(null);
+        showToast?.("Verification failed. Please try again.", "error");
+      },
+    });
+  }, [siteKey, showToast]);
+
+  useEffect(() => {
+    // Try to render immediately, or wait for script load
+    const interval = setInterval(() => {
+      if (window.turnstile && turnstileRef.current && !widgetIdRef.current) {
+        renderWidget();
+        clearInterval(interval);
+      }
+    }, 200);
+
+    return () => {
+      clearInterval(interval);
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [renderWidget]);
 
   const handleSubmit = () => {
     if (isSubmitting) return;
@@ -28,9 +94,14 @@ export default function ReportModal({
       return;
     }
 
+    if (!turnstileToken && siteKey) {
+      showToast?.("Please wait for verification to complete.", "warning");
+      return;
+    }
+
     setIsSubmitting(true);
     setSubmitStatus("transmitting");
-    onSubmit(description, null);
+    onSubmit(description, null, turnstileToken || undefined);
   };
 
   const isCoolingDown = (cooldownRemaining ?? 0) > 0;
@@ -79,23 +150,26 @@ export default function ReportModal({
               </div>
             </div>
 
+            {/* Turnstile Widget (invisible/managed - renders as a small badge) */}
+            <div ref={turnstileRef} className="mb-4 flex justify-center" />
+
             {/* Submit Button */}
             <button
               onClick={handleSubmit}
-              disabled={isSubmitting || isCoolingDown}
+              disabled={isSubmitting || isCoolingDown || (!turnstileToken && !!siteKey)}
               className={`w-full py-3.5 font-semibold text-sm transition-all rounded-xl flex items-center justify-center gap-2 ${
-                isCoolingDown || isSubmitting
+                isCoolingDown || isSubmitting || (!turnstileToken && !!siteKey)
                   ? "bg-white/5 text-gray-400 cursor-not-allowed"
                   : "bg-[#A50021] hover:bg-[#C20027] text-white active:bg-[#800019] shadow-lg shadow-[#A50021]/30"
               }`}
             >
-              {submitStatus === "locating" && (
+              {submitStatus === "transmitting" && (
                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               )}
               {isCoolingDown
                 ? `Wait ${Math.ceil((cooldownRemaining ?? 0) / 60000)}m`
-                : submitStatus === "locating"
-                  ? "Getting location..."
+                : !turnstileToken && siteKey
+                  ? "Verifying..."
                   : submitStatus === "transmitting"
                     ? "Sending..."
                     : "Submit Report"}

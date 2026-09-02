@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseServer';
 import { checkRateLimit, REPORT_LIMIT } from '@/lib/rateLimit';
+import { verifyTurnstile } from '@/lib/turnstile';
 import { MAX_DESCRIPTION_LENGTH } from '@/lib/constants';
 import { Filter } from 'bad-words';
 
@@ -47,7 +48,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { description, latitude, longitude } = body;
+    const { description, latitude, longitude, turnstileToken } = body;
+
+    // --- Turnstile verification (anti-bot) ---
+    if (!turnstileToken) {
+      return NextResponse.json({ error: 'Bot verification failed. Please try again.' }, { status: 403 });
+    }
+    const turnstileResult = await verifyTurnstile(turnstileToken, ip);
+    if (!turnstileResult.success) {
+      return NextResponse.json({ error: 'Bot verification failed. Please try again.' }, { status: 403 });
+    }
 
     // Validate coordinates
     if (typeof latitude !== 'number' || typeof longitude !== 'number') {
