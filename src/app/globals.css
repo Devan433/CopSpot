@@ -195,3 +195,12 @@ body {
 .animate-radar-ping {
   animation: radar-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
 }
+
+@keyframes slideUp {
+  from {
+    transform: translateY(100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}

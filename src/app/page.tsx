@@ -60,9 +60,8 @@ function getVoterFingerprint(): string {
 
 export default function Home() {
   const [reports, setReports] = useState<Report[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
   const [isInfoOpen, setIsInfoOpen] = useState(false);
-  const [isSelectingLocation, setIsSelectingLocation] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
   const [lastReportTime, setLastReportTime] = useState(0);
@@ -190,7 +189,7 @@ export default function Home() {
       longitude = fallback[1];
     }
 
-    setIsModalOpen(false);
+    setIsReporting(false);
     setMapCenter([latitude, longitude]);
     setLastReportTime(now);
     setCooldownRemaining(REPORT_COOLDOWN_MS);
@@ -391,9 +390,9 @@ export default function Home() {
       {/* Floating UI Overlay */}
       <div className="fixed inset-0 z-10 pointer-events-none">
 
-        {/* Center Target Pin */}
-        {isSelectingLocation && (
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[38px] pointer-events-none drop-shadow-xl z-20 transition-transform duration-200">
+        {/* Center Target Pin — only visible when reporting */}
+        {isReporting && (
+          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-[38px] pointer-events-none drop-shadow-xl z-20">
             <svg width="38" height="38" viewBox="0 0 24 24" fill="#EF4444" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" fill="black" />
@@ -401,7 +400,7 @@ export default function Home() {
           </div>
         )}
 
-        {!isSelectingLocation && (
+        {!isReporting && (
           <>
             {/* Top Left: Install button */}
             <div className="absolute top-4 left-4 pointer-events-auto">
@@ -427,7 +426,7 @@ export default function Home() {
             {/* Bottom Center: Report button (large red) */}
             <div className="absolute bottom-15 left-1/2 -translate-x-1/2 pointer-events-auto">
               <button
-                onClick={() => setIsSelectingLocation(true)}
+                onClick={() => setIsReporting(true)}
                 className="btn-fab-primary"
                 aria-label="Report sighting"
               >
@@ -448,36 +447,12 @@ export default function Home() {
           </>
         )}
 
-        {isSelectingLocation && (
-          <div className="absolute bottom-10 left-0 right-0 px-4 pointer-events-auto flex flex-col items-center gap-3">
-            <div className="bg-black/80 backdrop-blur-sm text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg border border-white/10 mb-2">
-              Drag map to place pin
-            </div>
-            <div className="flex gap-4 w-full max-w-sm">
-              <button
-                onClick={() => setIsSelectingLocation(false)}
-                className="flex-1 bg-white/10 hover:bg-white/20 text-white font-bold py-3 rounded-xl backdrop-blur-md border border-white/20 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={() => {
-                  setIsSelectingLocation(false);
-                  setIsModalOpen(true);
-                }}
-                className="flex-1 bg-[#EF4444] hover:bg-[#DC2626] text-white font-bold py-3 rounded-xl shadow-lg shadow-red-500/20 transition-colors"
-              >
-                Confirm
-              </button>
-            </div>
-          </div>
-        )}
-
       </div>
 
-      {isModalOpen && (
+      {/* Inline Report Bottom Sheet */}
+      {isReporting && (
         <ReportModal
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => setIsReporting(false)}
           onSubmit={handleReportSubmit}
           cooldownRemaining={cooldownRemaining}
           showToast={showToast}
