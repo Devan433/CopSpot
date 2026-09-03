@@ -369,6 +369,7 @@ export default function Home() {
 
     if (error) {
       console.error("Error fetching reports in bounds:", error);
+      showToast("Lost connection. Map pins may be outdated.", "error");
     } else if (data) {
       setReports(data.map((d) => mapDbRowToReport(d as Record<string, unknown>)));
     }
