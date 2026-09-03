@@ -142,6 +142,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || cooldown > 0 || isSending) return;
+    if (!turnstileToken && siteKey) return; // Wait for Turnstile token
 
     // Client-side profanity check for instant UX feedback (server validates too)
     if (profanityFilter.isProfane(inputText)) {
@@ -267,7 +268,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
               />
               <button
                 type="submit"
-                disabled={isSending || cooldown > 0 || !inputText.trim()}
+                disabled={isSending || cooldown > 0 || !inputText.trim() || (!turnstileToken && !!siteKey)}
                 className="bg-[#EF4444] text-white w-10 h-10 rounded-full flex items-center justify-center disabled:opacity-30 disabled:cursor-not-allowed transition-opacity shrink-0 self-center"
               >
                 {cooldown > 0 ? (
