@@ -110,6 +110,17 @@ export default function Home() {
     }
   }, []);
 
+  // Auto-clean expired reports from the UI every 30 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      const now = new Date();
+      setReports((currentReports) =>
+        currentReports.filter((r) => new Date(r.expires_at) > now)
+      );
+    }, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
   useEffect(() => {
     const fetchReports = async () => {
       setIsLoading(true);
