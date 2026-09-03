@@ -81,12 +81,30 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: 'Report not found' }, { status: 404 });
       }
 
+      const newConfirmations = voteType === 'confirm' ? report.confirmations + 1 : report.confirmations;
+      const newDenials = voteType === 'deny' ? report.denials + 1 : report.denials;
+
+      // Auto-remove: 3+ denials with 0 confirmations
+      if (newDenials >= 3 && newConfirmations === 0) {
+        const { error: deleteError } = await getSupabaseAdmin()
+          .from('reports')
+          .delete()
+          .eq('id', reportId);
+
+        if (deleteError) {
+          console.error('Auto-delete error:', deleteError);
+          return NextResponse.json({ error: 'Failed to remove report' }, { status: 500 });
+        }
+
+        return NextResponse.json({ success: true, autoRemoved: true }, { status: 200 });
+      }
+
       const { error: updateError } = await getSupabaseAdmin()
         .from('reports')
         .update({
-          confirmations: voteType === 'confirm' ? report.confirmations + 1 : report.confirmations,
-          denials: voteType === 'deny' ? report.denials + 1 : report.denials,
-          ...(voteType === 'confirm' && newExpiresAt ? { expires_at: newExpiresAt } : {}),
+          confirmations: newConfirmations,
+          denials: newDenials,
+          ...(newExpiresAt ? { expires_at: newExpiresAt } : {}),
         })
         .eq('id', reportId);
 

@@ -229,26 +229,40 @@ export default function Home() {
     const reportToUpdate = reports.find(r => r.id === reportId);
     if (!reportToUpdate) return;
 
-    let newExpiresAt = reportToUpdate.expires_at;
+    // Calculate new expiry: +5 min for confirm, -5 min for deny
+    const currentExpiry = new Date(reportToUpdate.expires_at).getTime();
+    const maxExpiry = Date.now() + 2 * 60 * 60 * 1000; // 2 hour cap
+    let newExpiresAt: string;
+
     if (voteType === 'confirm') {
-      const currentExpiry = new Date(reportToUpdate.expires_at).getTime();
-      const maxExpiry = Date.now() + 2 * 60 * 60 * 1000;
-      const extendedExpiry = Math.max(Date.now(), currentExpiry) + 30 * 60 * 1000;
+      const extendedExpiry = Math.max(Date.now(), currentExpiry) + 5 * 60 * 1000; // +5 min
       newExpiresAt = new Date(Math.min(extendedExpiry, maxExpiry)).toISOString();
+    } else {
+      const reducedExpiry = currentExpiry - 5 * 60 * 1000; // -5 min
+      newExpiresAt = new Date(Math.max(reducedExpiry, Date.now())).toISOString(); // don't go below now
     }
 
+    // Check if this denial would trigger auto-remove (3+ denials, 0 confirmations)
+    const newDenials = voteType === 'deny' ? reportToUpdate.denials + 1 : reportToUpdate.denials;
+    const newConfirmations = voteType === 'confirm' ? reportToUpdate.confirmations + 1 : reportToUpdate.confirmations;
+    const shouldAutoRemove = newDenials >= 3 && newConfirmations === 0;
+
     // Optimistic update
-    setReports(prev => prev.map(r => {
-      if (r.id === reportId) {
-        return {
-          ...r,
-          confirmations: voteType === 'confirm' ? r.confirmations + 1 : r.confirmations,
-          denials: voteType === 'deny' ? r.denials + 1 : r.denials,
-          expires_at: newExpiresAt
-        };
-      }
-      return r;
-    }));
+    if (shouldAutoRemove) {
+      setReports(prev => prev.filter(r => r.id !== reportId));
+    } else {
+      setReports(prev => prev.map(r => {
+        if (r.id === reportId) {
+          return {
+            ...r,
+            confirmations: newConfirmations,
+            denials: newDenials,
+            expires_at: newExpiresAt
+          };
+        }
+        return r;
+      }));
+    }
 
     votedReports.add(reportId);
     saveVotedReport(reportId);
@@ -260,37 +274,39 @@ export default function Home() {
         body: JSON.stringify({
           reportId,
           voteType,
-          newExpiresAt: voteType === 'confirm' ? newExpiresAt : null,
+          newExpiresAt,
           voterFingerprint: getVoterFingerprint(),
         }),
       });
 
       if (res.status === 409) {
-        // Already voted (server-side dedup caught it)
         showToast("You've already voted on this report.", "warning");
         votedReports.delete(reportId);
-        setReports(prev => prev.map(r => {
-          if (r.id === reportId) return reportToUpdate;
-          return r;
-        }));
+        setReports(prev => {
+          if (shouldAutoRemove) return [...prev, reportToUpdate];
+          return prev.map(r => r.id === reportId ? reportToUpdate : r);
+        });
         return;
       }
 
       if (res.status === 429) {
         const data = await res.json();
         showToast(data.error || "Too many votes. Please slow down.", "warning");
-        // Rollback optimistic update
         votedReports.delete(reportId);
-        setReports(prev => prev.map(r => {
-          if (r.id === reportId) return reportToUpdate;
-          return r;
-        }));
+        setReports(prev => {
+          if (shouldAutoRemove) return [...prev, reportToUpdate];
+          return prev.map(r => r.id === reportId ? reportToUpdate : r);
+        });
         return;
       }
 
       if (!res.ok) {
         const data = await res.json().catch(() => ({ error: 'Unknown error' }));
         throw new Error(data.error || 'Vote failed');
+      }
+
+      if (shouldAutoRemove) {
+        showToast("Report removed — marked as false by multiple users.", "success");
       }
     } catch (err) {
       console.error("Error updating vote:", err);
@@ -300,10 +316,10 @@ export default function Home() {
       const arr = Array.from(votedReports);
       localStorage.setItem("copspot_voted", JSON.stringify(arr));
 
-      setReports(prev => prev.map(r => {
-        if (r.id === reportId) return reportToUpdate;
-        return r;
-      }));
+      setReports(prev => {
+        if (shouldAutoRemove) return [...prev, reportToUpdate];
+        return prev.map(r => r.id === reportId ? reportToUpdate : r);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reports, votedReports]);
