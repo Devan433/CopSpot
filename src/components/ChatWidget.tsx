@@ -255,7 +255,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
             </div>
 
             {/* Input Area */}
-            <div ref={turnstileRef} className="hidden" />
+            <div ref={turnstileRef} className="overflow-hidden h-0" />
             <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex gap-2">
               <input
                 type="text"
