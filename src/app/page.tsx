@@ -28,8 +28,18 @@ function mapDbRowToReport(d: Record<string, unknown>): Report {
 function getVotedReports(): Set<string> {
   if (typeof window === "undefined") return new Set();
   try {
-    const stored = localStorage.getItem("copspot_voted");
-    return stored ? new Set(JSON.parse(stored)) : new Set();
+    const stored = localStorage.getItem("copspot_voted_v2");
+    if (!stored) return new Set();
+    
+    // Filter out anything older than 24 hours (86,400,000 milliseconds)
+    const cutoff = Date.now() - 24 * 60 * 60 * 1000;
+    const votes: { id: string, time: number }[] = JSON.parse(stored);
+    const validVotes = votes.filter(v => v.time > cutoff);
+    
+    // Save the cleaned-up list back to memory immediately
+    localStorage.setItem("copspot_voted_v2", JSON.stringify(validVotes));
+    
+    return new Set(validVotes.map(v => v.id));
   } catch {
     return new Set();
   }
@@ -37,11 +47,13 @@ function getVotedReports(): Set<string> {
 
 function saveVotedReport(reportId: string): void {
   if (typeof window === "undefined") return;
-  const voted = getVotedReports();
-  voted.add(reportId);
-  const arr = Array.from(voted);
-  if (arr.length > 500) arr.splice(0, arr.length - 500);
-  localStorage.setItem("copspot_voted", JSON.stringify(arr));
+  
+  // We re-fetch to ensure we have the latest cleaned list
+  const stored = localStorage.getItem("copspot_voted_v2");
+  const votes: { id: string, time: number }[] = stored ? JSON.parse(stored) : [];
+  
+  votes.push({ id: reportId, time: Date.now() });
+  localStorage.setItem("copspot_voted_v2", JSON.stringify(votes));
 }
 
 // Simple device fingerprint for server-side vote dedup

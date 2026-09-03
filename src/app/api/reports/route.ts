@@ -64,8 +64,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid coordinates' }, { status: 400 });
     }
 
-    if (latitude < -90 || latitude > 90 || longitude < -180 || longitude > 180) {
-      return NextResponse.json({ error: 'Coordinates out of range' }, { status: 400 });
+    // Restrict coordinates to India's rough bounding box
+    if (latitude < 6.7 || latitude > 35.5 || longitude < 68.1 || longitude > 97.4) {
+      return NextResponse.json({ error: 'Location must be within India' }, { status: 400 });
     }
 
     // Validate description
