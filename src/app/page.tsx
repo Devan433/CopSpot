@@ -59,15 +59,14 @@ function saveVotedReport(reportId: string): void {
 // Simple device fingerprint for server-side vote dedup
 function getVoterFingerprint(): string {
   if (typeof window === "undefined") return "server";
-  const raw = `${navigator.userAgent}|${screen.width}x${screen.height}|${Intl.DateTimeFormat().resolvedOptions().timeZone}`;
-  // Simple hash
-  let hash = 0;
-  for (let i = 0; i < raw.length; i++) {
-    const char = raw.charCodeAt(i);
-    hash = ((hash << 5) - hash) + char;
-    hash |= 0;
+  
+  let fp = localStorage.getItem("copspot_voter_id");
+  if (!fp) {
+    fp = 'user_' + Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    localStorage.setItem("copspot_voter_id", fp);
   }
-  return `fp_${Math.abs(hash).toString(36)}`;
+  
+  return fp;
 }
 
 export default function Home() {
