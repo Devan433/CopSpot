@@ -97,8 +97,8 @@ export const REPORT_LIMIT: RateLimitConfig = {
 };
 
 export const MESSAGE_LIMIT: RateLimitConfig = {
-  maxRequests: 20,
-  windowMs: 5 * 60 * 1000, // 20 messages per 5 minutes
+  maxRequests: 5,
+  windowMs: 20 * 60 * 1000, // 5 messages per 20 minutes
 };
 
 export const VOTE_LIMIT: RateLimitConfig = {
