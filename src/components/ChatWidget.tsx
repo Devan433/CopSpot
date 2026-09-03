@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/lib/supabase";
 import { Filter } from "bad-words";
 
@@ -41,6 +41,11 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
   const [isSending, setIsSending] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [turnstileToken, setTurnstileToken] = useState<string | null>(null);
+  const turnstileRef = useRef<HTMLDivElement>(null);
+  const widgetIdRef = useRef<string | null>(null);
+
+  const siteKey = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY;
 
   // Fetch initial messages and set up subscription
   useEffect(() => {
@@ -94,6 +99,46 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
     }
   }, [cooldown]);
 
+  // Load Turnstile script once
+  useEffect(() => {
+    if (!siteKey) return;
+    if (document.querySelector('script[src*="turnstile"]')) return;
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    document.head.appendChild(script);
+  }, [siteKey]);
+
+  // Render Turnstile widget when chat opens
+  const renderWidget = useCallback(() => {
+    if (!siteKey || !turnstileRef.current || !window.turnstile) return;
+    if (widgetIdRef.current) return;
+    widgetIdRef.current = window.turnstile.render(turnstileRef.current, {
+      sitekey: siteKey,
+      theme: 'dark',
+      size: 'invisible',
+      callback: (token: string) => { setTurnstileToken(token); },
+      'error-callback': () => { setTurnstileToken(null); },
+    });
+  }, [siteKey]);
+
+  useEffect(() => {
+    if (!isOpen || !siteKey) return;
+    const interval = setInterval(() => {
+      if (window.turnstile && turnstileRef.current && !widgetIdRef.current) {
+        renderWidget();
+        clearInterval(interval);
+      }
+    }, 200);
+    return () => {
+      clearInterval(interval);
+      if (widgetIdRef.current && window.turnstile) {
+        window.turnstile.remove(widgetIdRef.current);
+        widgetIdRef.current = null;
+      }
+    };
+  }, [isOpen, siteKey, renderWidget]);
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputText.trim() || cooldown > 0 || isSending) return;
@@ -110,8 +155,14 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
       const res = await fetch('/api/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ text: inputText.trim(), username }),
+        body: JSON.stringify({ text: inputText.trim(), username, turnstileToken: turnstileToken || undefined }),
       });
+
+      // Reset Turnstile for next message (tokens are single-use)
+      if (widgetIdRef.current && window.turnstile) {
+        setTurnstileToken(null);
+        window.turnstile.reset(widgetIdRef.current);
+      }
 
       if (res.status === 429) {
         const data = await res.json();
@@ -204,6 +255,7 @@ export default function ChatWidget({ showToast }: { showToast?: (msg: string, ty
             </div>
 
             {/* Input Area */}
+            <div ref={turnstileRef} className="hidden" />
             <form onSubmit={handleSendMessage} className="p-3 border-t border-white/10 flex gap-2">
               <input
                 type="text"

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/supabaseServer';
 import { checkRateLimit, MESSAGE_LIMIT } from '@/lib/rateLimit';
+import { verifyTurnstile } from '@/lib/turnstile';
 import { Filter } from 'bad-words';
 
 const profanityFilter = new Filter();
@@ -48,7 +49,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid request body' }, { status: 400 });
     }
 
-    const { text, username } = body;
+    const { text, username, turnstileToken } = body;
+
+    // --- Turnstile verification (anti-bot) ---
+    if (!turnstileToken) {
+      return NextResponse.json({ error: 'Bot verification failed.' }, { status: 403 });
+    }
+    const turnstileResult = await verifyTurnstile(turnstileToken, ip);
+    if (!turnstileResult.success) {
+      return NextResponse.json({ error: 'Bot verification failed.' }, { status: 403 });
+    }
 
     // Validate text
     if (typeof text !== 'string' || !text.trim()) {
