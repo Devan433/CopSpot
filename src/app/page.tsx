@@ -75,13 +75,21 @@ export default function Home() {
   const [isInfoOpen, setIsInfoOpen] = useState(false);
   const [mapCenter, setMapCenter] = useState<[number, number] | undefined>(undefined);
   const [isLoading, setIsLoading] = useState(true);
-  const [lastReportTime, setLastReportTime] = useState(0);
-  const [cooldownRemaining, setCooldownRemaining] = useState(0);
+  const [lastReportTime, setLastReportTime] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    return parseInt(localStorage.getItem("copspot_last_report") || "0", 10);
+  });
+  const [cooldownRemaining, setCooldownRemaining] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    const saved = parseInt(localStorage.getItem("copspot_last_report") || "0", 10);
+    return Math.max(0, saved + REPORT_COOLDOWN_MS - Date.now());
+  });
   const [votedReports] = useState<Set<string>>(getVotedReports);
   const { toasts, showToast, dismissToast } = useToast();
   const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const boundsTimeoutRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const userLocationRef = useRef<[number, number] | null>(null);
+  const mapCenterRef = useRef<[number, number] | null>(null);
 
   useEffect(() => {
     if (cooldownRemaining <= 0) return;
@@ -203,10 +211,8 @@ export default function Home() {
       latitude = location.lat;
       longitude = location.lng;
     } else {
-      const viewportCenter: [number, number] | null = mapBounds
-        ? [(mapBounds.north + mapBounds.south) / 2, (mapBounds.east + mapBounds.west) / 2]
-        : null;
-      const fallback = viewportCenter ?? userLocationRef.current ?? KERALA_CENTER;
+      // Use the actual map center (from Leaflet) for precise pin placement
+      const fallback = mapCenterRef.current ?? userLocationRef.current ?? KERALA_CENTER;
       latitude = fallback[0];
       longitude = fallback[1];
     }
@@ -215,6 +221,7 @@ export default function Home() {
     setMapCenter([latitude, longitude]);
     setLastReportTime(now);
     setCooldownRemaining(REPORT_COOLDOWN_MS);
+    localStorage.setItem("copspot_last_report", now.toString());
 
     try {
       const res = await fetch('/api/reports', {
@@ -389,6 +396,10 @@ export default function Home() {
     setMapBounds(bounds);
   }, []);
 
+  const handleCenterChange = useCallback((center: [number, number]) => {
+    mapCenterRef.current = center;
+  }, []);
+
   // Debounced re-fetch when map viewport changes
   useEffect(() => {
     if (!mapBounds) return;
@@ -422,7 +433,7 @@ export default function Home() {
             <span className="text-sm opacity-60">Loading map...</span>
           </div>
         ) : (
-          <MapContainer reports={activeReports} centerOn={mapCenter} onVote={handleVote} onBoundsChange={handleBoundsChange} />
+          <MapContainer reports={activeReports} centerOn={mapCenter} onVote={handleVote} onBoundsChange={handleBoundsChange} onCenterChange={handleCenterChange} />
         )}
       </div>
 

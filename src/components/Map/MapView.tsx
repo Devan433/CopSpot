@@ -18,8 +18,8 @@ function MapController({ center }: { center?: [number, number] }) {
   return null;
 }
 
-// Track map viewport bounds changes
-function BoundsTracker({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds) => void }) {
+// Track map viewport bounds changes and center
+function BoundsTracker({ onBoundsChange, onCenterChange }: { onBoundsChange: (bounds: MapBounds) => void; onCenterChange?: (center: [number, number]) => void }) {
   const map = useMap();
 
   useEffect(() => {
@@ -31,12 +31,14 @@ function BoundsTracker({ onBoundsChange }: { onBoundsChange: (bounds: MapBounds)
         east: b.getEast(),
         west: b.getWest(),
       });
+      const c = map.getCenter();
+      onCenterChange?.([c.lat, c.lng]);
     };
 
     handleMoveEnd(); // Fire on mount to get initial bounds
     map.on('moveend', handleMoveEnd);
     return () => { map.off('moveend', handleMoveEnd); };
-  }, [map, onBoundsChange]);
+  }, [map, onBoundsChange, onCenterChange]);
 
   return null;
 }
@@ -79,7 +81,7 @@ function getMarkerIcon(isRecent: boolean, opacity: number): L.DivIcon {
   return icon;
 }
 
-export default function MapView({ reports, centerOn, onVote, onBoundsChange }: { reports: Report[], centerOn?: [number, number], onVote?: (reportId: string, voteType: 'confirm' | 'deny') => void, onBoundsChange?: (bounds: MapBounds) => void }) {
+export default function MapView({ reports, centerOn, onVote, onBoundsChange, onCenterChange }: { reports: Report[], centerOn?: [number, number], onVote?: (reportId: string, voteType: 'confirm' | 'deny') => void, onBoundsChange?: (bounds: MapBounds) => void, onCenterChange?: (center: [number, number]) => void }) {
   // Memoize the markers to avoid unnecessary re-renders
   const markers = useMemo(() => reports.map((report) => {
     const isRecent = Date.now() - new Date(report.created_at).getTime() < 10 * 60000;
@@ -137,7 +139,7 @@ export default function MapView({ reports, centerOn, onVote, onBoundsChange }: {
       zoomControl={false}
     >
       <MapController center={centerOn} />
-      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} />}
+      {onBoundsChange && <BoundsTracker onBoundsChange={onBoundsChange} onCenterChange={onCenterChange} />}
       
       {/* Standard OSM Map */}
       <TileLayer
