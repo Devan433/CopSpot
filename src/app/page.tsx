@@ -460,7 +460,7 @@ export default function Home() {
 
         {/* Center Target Pin — only visible when reporting */}
         {isReporting && (
-          <div className="absolute top-[40%] left-1/2 -translate-x-1/2 -translate-y-[38px] pointer-events-none drop-shadow-xl z-20">
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[38px] pointer-events-none drop-shadow-xl z-20">
             <svg width="38" height="38" viewBox="0 0 24 24" fill="#EF4444" stroke="black" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" />
               <circle cx="12" cy="10" r="3" fill="black" />
