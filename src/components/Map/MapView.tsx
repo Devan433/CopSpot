@@ -31,8 +31,11 @@ function BoundsTracker({ onBoundsChange, onCenterChange }: { onBoundsChange: (bo
         east: b.getEast(),
         west: b.getWest(),
       });
-      const c = map.getCenter();
-      onCenterChange?.([c.lat, c.lng]);
+      // Report the lat/lng at the crosshair pixel position (40% from top, centered horizontally)
+      const size = map.getSize();
+      const crosshairPoint = L.point(size.x / 2, size.y * 0.4);
+      const crosshairLatLng = map.containerPointToLatLng(crosshairPoint);
+      onCenterChange?.([crosshairLatLng.lat, crosshairLatLng.lng]);
     };
 
     handleMoveEnd(); // Fire on mount to get initial bounds

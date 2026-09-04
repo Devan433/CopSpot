@@ -69,6 +69,17 @@ function getVoterFingerprint(): string {
   return fp;
 }
 
+// Haversine formula: distance between two lat/lng points in km
+function getDistanceKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLng / 2) * Math.sin(dLng / 2);
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function Home() {
   const [reports, setReports] = useState<Report[]>([]);
   const [isReporting, setIsReporting] = useState(false);
@@ -203,18 +214,25 @@ export default function Home() {
       return;
     }
 
-    // Fallback chain: fresh GPS → actual map viewport center → last known GPS → KERALA_CENTER
-    let latitude: number;
-    let longitude: number;
+    // Require GPS to be available
+    if (!userLocationRef.current) {
+      showToast("Please enable location to submit a report.", "error");
+      return;
+    }
 
-    if (location) {
-      latitude = location.lat;
-      longitude = location.lng;
-    } else {
-      // Use the actual map center (from Leaflet) for precise pin placement
-      const fallback = mapCenterRef.current ?? userLocationRef.current ?? KERALA_CENTER;
-      latitude = fallback[0];
-      longitude = fallback[1];
+    // Use the crosshair position (precise pixel-to-coordinate from MapView)
+    const crosshairPos = mapCenterRef.current ?? userLocationRef.current;
+    const latitude = crosshairPos[0];
+    const longitude = crosshairPos[1];
+
+    // Enforce 1 km radius from user's actual GPS position
+    const distance = getDistanceKm(
+      userLocationRef.current[0], userLocationRef.current[1],
+      latitude, longitude
+    );
+    if (distance > 1) {
+      showToast("You can only report within 1 km of your location.", "warning");
+      return;
     }
 
     setIsReporting(false);
@@ -476,7 +494,23 @@ export default function Home() {
             {/* Bottom Center: Report button (large red) */}
             <div className="absolute bottom-15 left-1/2 -translate-x-1/2 pointer-events-auto">
               <button
-                onClick={() => setIsReporting(true)}
+                onClick={() => {
+                  if (!navigator.geolocation) {
+                    showToast("Location is not supported on this device.", "error");
+                    return;
+                  }
+                  navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                      userLocationRef.current = [pos.coords.latitude, pos.coords.longitude];
+                      setMapCenter([pos.coords.latitude, pos.coords.longitude]);
+                      setIsReporting(true);
+                    },
+                    () => {
+                      showToast("Please enable location to submit a report.", "error");
+                    },
+                    { enableHighAccuracy: true, timeout: 10000 }
+                  );
+                }}
                 className="btn-fab-primary"
                 aria-label="Report sighting"
               >
